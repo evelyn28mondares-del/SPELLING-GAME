@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Spelling Game</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            text-align: center;
+            width: 90%;
+            max-width: 500px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        button {
+            background-color: #ff4757;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+        }
+
+        button:hover {
+            background-color: #ff6b81;
+            transform: scale(1.05);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        input[type="text"] {
+            width: 80%;
+            padding: 12px 20px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 25px;
+            margin-bottom: 20px;
+            text-align: center;
+            outline: none;
+        }
+
+        .hint-box {
+            font-size: 1.5rem;
+            font-weight: bold;
+            letter-spacing: 5px;
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .score-board {
+            font-size: 1rem;
+            margin-bottom: 15px;
+            opacity: 0.8;
+        }
+
+        .feedback {
+            font-weight: bold;
+            margin-top: 15px;
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <div id="start-menu">
+            <h1>Spelling Quest</h1>
+            <p>Can you spell all the words correctly?</p>
+            <br>
+            <button onclick="startGame()">START GAME</button>
+        </div>
+
+        <div id="game-screen" class="hidden">
+            <div class="score-board">Score: <span id="score">0</span> / 5</div>
+            <h2>Spell this word:</h2>
+            
+            <div id="word-hint" class="hint-box">_ _ _ _</div>
+            
+            <p id="definition" style="font-style: italic; margin-bottom: 20px;"></p>
+
+            <input type="text" id="user-input" placeholder="Type your answer here" autocomplete="off">
+            <br>
+            <button onclick="checkAnswer()">SUBMIT</button>
+            <div id="feedback" class="feedback"></div>
+        </div>
+
+        <div id="end-screen" class="hidden">
+            <h1>Congratulations! 🎉</h1>
+            <p>You completed the spelling challenge!</p>
+            <h2>Final Score: <span id="final-score">0</span>/5</h2>
+            <button onclick="restartGame()">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <script>
+        const wordList = [
+            { word: "apple", hint: "A crunchy red or green fruit" },
+            { word: "guitar", hint: "A musical instrument with 6 strings" },
+            { word: "ocean", hint: "A huge body of salty water" },
+            { word: "rocket", hint: "It flies into outer space" },
+            { word: "wizard", hint: "A magical person with a wand" }
+        ];
+
+        let currentWordIndex = 0;
+        let score = 0;
+
+        const startMenu = document.getElementById('start-menu');
+        const gameScreen = document.getElementById('game-screen');
+        const endScreen = document.getElementById('end-screen');
+        const wordHint = document.getElementById('word-hint');
+        const definition = document.getElementById('definition');
+        const userInput = document.getElementById('user-input');
+        const scoreDisplay = document.getElementById('score');
+        const finalScoreDisplay = document.getElementById('final-score');
+        const feedback = document.getElementById('feedback');
+
+        function startGame() {
+            startMenu.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            loadWord();
+        }
+
+        function loadWord() {
+            userInput.value = "";
+            feedback.textContent = "";
+            
+            if (currentWordIndex < wordList.length) {
+                let currentWordObj = wordList[currentWordIndex];
+                definition.textContent = `Hint: "${currentWordObj.hint}"`;
+                wordHint.textContent = currentWordObj.word.replace(/[a-z]/g, "_ ");
+            } else {
+                endGame();
+            }
+        }
+
+        function checkAnswer() {
+            let playerAnswer = userInput.value.trim().toLowerCase();
+            let correctAnswer = wordList[currentWordIndex].word.toLowerCase();
+
+            if (playerAnswer === correctAnswer) {
+                score++;
+                scoreDisplay.textContent = score;
+                feedback.style.color = "#4cd137";
+                feedback.textContent = "Correct!🌟";
+                
+                currentWordIndex++;
+                setTimeout(loadWord, 1500);
+            } else {
+                feedback.style.color = "#e84118";
+                feedback.textContent = "Try again! ❌";
+            }
+        }
+
+        userInput.addEventListener("keyup", function(event) {
+            if (event.key === "Enter") {
+                checkAnswer();
+            }
+        });
+
+        function endGame() {
+            gameScreen.classList.add('hidden');
+            endScreen.classList.remove('hidden');
+            finalScoreDisplay.textContent = score;
+        }
+
+        function restartGame() {
+            currentWordIndex = 0;
+            score = 0;
+            scoreDisplay.textContent = score;
+            endScreen.classList.add('hidden');
+            startMenu.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
