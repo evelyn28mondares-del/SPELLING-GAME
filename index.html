@@ -274,7 +274,7 @@
 
             <div>
                 <div class="vs-header-panel">
-                    <span class="vs-header-title" id="title-label-a">🔴 TEAM A</span>
+                    <span class="vs-header-title" id="title-label-a">⭐ PLAYER SCORE</span>
                     <div id="timer-box-a" class="local-timer-pill">⏱️ <span id="clock-display-a">60</span>s</div>
                     <span class="score-counter-bubble" id="score-val-a">0</span>
                 </div>
@@ -339,6 +339,9 @@
             { label: "⚡ SPEED BOOSTER!", desc: "+20 Seconds Added To Your Clock!", action: (t) => teamData[t].timeLeft += 20 },
             { label: "🩹 MINOR SCRATCH!", desc: "-50 Points Lost!", action: (t) => teamData[t].score = Math.max(0, teamData[t].score - 50) }
         ];
+
+        document.getElementById('player-input-a').addEventListener('input', function() { updateLiveUnderscores('a', this.value); });
+        document.getElementById('player-input-b').addEventListener('input', function() { updateLiveUnderscores('b', this.value); });
 
         function playSound(type) {
             if (!document.getElementById('setup-sfx').checked) return;
@@ -605,7 +608,6 @@
                 optionsArea.appendChild(btn);
             });
 
-            // CLEAR
             const clearBtn = document.createElement('button');
             clearBtn.className = "letter-block-btn letter-clear-btn";
             clearBtn.textContent = "⌫";
@@ -617,7 +619,6 @@
             };
             optionsArea.appendChild(clearBtn);
 
-            // SKIP
             const skipBtn = document.createElement('button');
             skipBtn.className = "letter-block-btn btn-skip";
             skipBtn.textContent = "⏭️";
@@ -630,56 +631,64 @@
             const fd = document.getElementById(`feedback-${team}`);
             const blocker = document.getElementById(`blocker-${team}`);
             
-            let playerAttempt = inputField.value.trim().toLowerCase().replace(/\s+/g, '');
-            let correctAnswerString = teamData[team].wordList[teamData[team].index].answer;
-            let actualAnswer = correctAnswerString.toLowerCase().replace(/\s+/g, '');
+            if(!inputField || !fd || !blocker) return;
+            if(teamData[team].index >= teamData[team].wordList.length) return;
 
-            // Freeze panel controls briefly on submission to prevent multi-taps
+            const playerAnswer = inputField.value.trim().toLowerCase().replace(/\s+/g, '');
+            const correctTarget = teamData[team].wordList[teamData[team].index].answer.trim().toLowerCase().replace(/\s+/g, '');
+            
+            clearInterval(teamData[team].timerObj);
             blocker.classList.remove('hidden');
 
-            if(playerAttempt === actualAnswer) {
-                clearInterval(teamData[team].timerObj);
+            if (playerAnswer === correctTarget) {
                 playSound('correct');
-                
-                teamData[team].score += 10; // Award 10 Points
-                document.getElementById(`score-val-${team}`).textContent = teamData[team].score;
-                
-                fd.style.color = "#a3e635";
-                fd.textContent = "Correct! ✨ (+10)";
-                teamData[team].index++;
-                setTimeout(() => { loadTeamWord(team); }, 1200);
+                fd.style.color = "#2ecc71";
+                fd.textContent = "✨ Correct! +10 Points";
+                teamData[team].score += 10;
             } else {
-                // INCORRECT LOGIC TRIGGER: Show answer and proceed immediately to keep game flow
-                clearInterval(teamData[team].timerObj);
                 playSound('wrong');
-                
-                teamData[team].score = Math.max(0, teamData[team].score - 5); // Small Penalty (-5)
-                document.getElementById(`score-val-${team}`).textContent = teamData[team].score;
-                
-                fd.style.color = "#fca5a5";
-                fd.textContent = `❌ Wrong! Answer: ${correctAnswerString} (-5)`;
-                
-                teamData[team].index++;
-                setTimeout(() => { loadTeamWord(team); }, 2200); // Give them 2 seconds to see correct spelling before moving next
+                fd.style.color = "#ffdddd";
+                fd.textContent = `❌ Wrong! Answer: ${teamData[team].wordList[teamData[team].index].answer}`;
+                teamData[team].score = Math.max(0, teamData[team].score - 5);
+            }
+
+            document.getElementById(`score-val-${team}`).textContent = teamData[team].score;
+            teamData[team].index++;
+
+            setTimeout(() => {
+                loadTeamWord(team);
+            }, 2000);
+        }
+
+        function checkEndGameStatus() {
+            const standardClear = teamData.a.index >= teamData.a.wordList.length;
+            const splitClear = currentModeSetting === 'double' ? (teamData.b.index >= teamData.b.wordList.length) : true;
+
+            if (standardClear && splitClear) {
+                setTimeout(() => {
+                    if (currentModeSetting === 'single') {
+                        alert(`Game Complete! Final Score: ${teamData.a.score} Points.`);
+                    } else {
+                        let finalAnnouncement = `Game Complete!\n\n🔴 Team A: ${teamData.a.score} Points\n🔵 Team B: ${teamData.b.score} Points\n\n`;
+                        if (teamData.a.score > teamData.b.score) {
+                            finalAnnouncement += "🏆 Team A Wins!";
+                        } else if (teamData.b.score > teamData.a.score) {
+                            finalAnnouncement += "🏆 Team B Wins!";
+                        } else {
+                            finalAnnouncement += "🤝 It's a Tie Game!";
+                        }
+                        alert(finalAnnouncement);
+                    }
+                    closeGameEngine();
+                }, 800);
             }
         }
 
-        document.getElementById('player-input-a').addEventListener('input', (e) => updateLiveUnderscores('a', e.target.value));
-        document.getElementById('player-input-b').addEventListener('input', (e) => updateLiveUnderscores('b', e.target.value));
-        
-        document.getElementById('player-input-a').addEventListener('keyup', (e) => { if(e.key === "Enter") verifyTeamAnswer('a'); });
-        document.getElementById('player-input-b').addEventListener('keyup', (e) => { if(e.key === "Enter") verifyTeamAnswer('b'); });
-
-        function checkEndGameStatus() {
-            let doneA = teamData.a.index >= teamData.a.wordList.length;
-            let doneB = teamData.b.index >= teamData.b.wordList.length;
-            
-            if(currentModeSetting === 'single' && doneA) {
-                alert(`Game Over! 🎉\nYour Final Score: ${teamData.a.score} Points`);
-                closeGameEngine();
-                return;
-            }
-
-            if (doneA && doneB) {
-                let msg = `Match Complete!\n\nTeam A: ${teamData.a.score} Points\nTeam B: ${teamData.b.score} Points\n\n`;
-                if(teamData.a.score > teamData.b.
+        function closeGameEngine() {
+            clearInterval(teamData.a.timerObj);
+            clearInterval(teamData.b.timerObj);
+            document.getElementById('game-play-screen').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
