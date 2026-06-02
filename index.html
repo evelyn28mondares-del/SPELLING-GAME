@@ -34,7 +34,7 @@
         }
         .setting-box label { font-weight: bold; font-size: 1rem; color: #2c3e50; }
         .setting-box input[type="number"], .setting-box select {
-            width: 120px; padding: 6px; border-radius: 5px; border: 1px solid #ccd1d9; text-align: center; font-size: 1rem;
+            width: 130px; padding: 6px; border-radius: 5px; border: 1px solid #ccd1d9; text-align: center; font-size: 1rem;
         }
         .setting-box input[type="checkbox"] { transform: scale(1.4); }
 
@@ -72,14 +72,45 @@
         #game-play-screen {
             position: fixed; top:0; left:0; right:0; bottom:0; background: #2c3e50;
             z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white;
+            padding: 20px;
         }
         .game-card {
-            background: rgba(255,255,255,0.1); padding: 40px; border-radius: 20px;
-            text-align: center; width: 90%; max-width: 550px; border: 2px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1); padding: 30px; border-radius: 20px;
+            text-align: center; width: 100%; max-width: 650px; border: 2px solid rgba(255,255,255,0.2);
         }
+        
+        /* MULTIPLAYER / DOUBLE SCOREBOARD STYLING */
+        .scoreboard-container {
+            display: flex; justify-content: space-between; margin-bottom: 20px; gap: 20px;
+        }
+        .team-box {
+            flex: 1; padding: 10px; border-radius: 10px; text-align: center; font-weight: bold;
+        }
+        .team-a { background: #e74c3c; color: white; }
+        .team-b { background: #3498db; color: white; }
+        .team-score { font-size: 2.2rem; margin: 5px 0; font-weight: bold; }
+        .score-btn {
+            background: white; border: none; color: #333; font-weight: bold;
+            padding: 5px 15px; border-radius: 5px; cursor: pointer; margin: 0 3px; font-size: 1rem;
+        }
+
+        /* SINGLE PLAYER SCORE BOX */
+        .single-score-box {
+            background: rgba(0,0,0,0.2); border-radius: 10px; padding: 10px;
+            margin-bottom: 20px; font-size: 1.4rem; font-weight: bold;
+        }
+
+        .hint-display-area {
+            min-height: 150px; display: flex; align-items: center; justify-content: center; margin: 15px 0;
+        }
+        .hint-image {
+            max-width: 100%; max-height: 220px; border-radius: 10px; border: 4px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .hint-text { font-size: 2.8rem; margin: 0; font-weight: bold; color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+
         .game-letter-input {
-            width: 80%; padding: 15px; font-size: 1.6rem; text-align: center;
-            border-radius: 12px; border: none; margin: 25px 0; outline: none; color: #333;
+            width: 80%; padding: 12px; font-size: 1.5rem; text-align: center;
+            border-radius: 12px; border: none; margin: 15px 0; outline: none; color: #333;
         }
         .game-btn {
             background: #e67e22; color: white; border: none; padding: 12px 40px;
@@ -102,6 +133,13 @@
 
         <div class="settings-grid">
             <div class="setting-box">
+                <label>Game Mode:</label>
+                <select id="setup-game-mode">
+                    <option value="single">Single Player</option>
+                    <option value="double">Double Player (Teams)</option>
+                </select>
+            </div>
+            <div class="setting-box">
                 <label>Timer:</label>
                 <input type="number" id="setup-timer" value="60">
             </div>
@@ -114,10 +152,6 @@
                 </select>
             </div>
             <div class="setting-box">
-                <label>Sync Qs:</label>
-                <input type="checkbox" id="setup-sync" checked>
-            </div>
-            <div class="setting-box">
                 <label>HP Hearts:</label>
                 <input type="number" id="setup-hp" value="5">
             </div>
@@ -126,15 +160,11 @@
                 <input type="checkbox" id="setup-music" checked>
             </div>
             <div class="setting-box">
-                <label>Vol:</label>
-                <input type="range" min="0" max="100" value="80" style="width:100px;">
-            </div>
-            <div class="setting-box">
                 <label>SFX:</label>
                 <input type="checkbox" id="setup-sfx" checked>
             </div>
-            <div class="setting-box" style="background:#ffebee;">
-                <label style="color:#c62828;">Clear App:</label>
+            <div class="setting-box" style="grid-column: span 2; background:#ffebee;">
+                <label style="color:#c62828; font-weight: bold;">Clear App:</label>
                 <button onclick="clearAllRows()" style="background:#e74c3c; color:white; border:none; padding:6px 12px; font-weight:bold; cursor:pointer; border-radius:5px;">ERASE DATA</button>
             </div>
         </div>
@@ -149,7 +179,7 @@
             <table class="words-table">
                 <thead>
                     <tr>
-                        <th style="width: 45%;">Hint / Image</th>
+                        <th style="width: 45%;">Hint / Image URL</th>
                         <th style="width: 45%;">Answer</th>
                         <th style="width: 10%;">Del</th>
                     </tr>
@@ -174,20 +204,54 @@
     <div id="game-play-screen" class="hidden">
         <button class="btn-exit-game" onclick="closeGameEngine()">❌ EXIT HUB</button>
         <div class="game-card">
-            <div style="font-size: 1.3rem; margin-bottom: 10px; opacity: 0.8;">Score: <span id="game-score-count">0</span></div>
-            <h2 id="game-current-hint" style="font-size: 2.5rem; margin: 10px 0;">Fruit</h2>
             
-            <div id="game-underscore-slots" style="font-size: 3rem; letter-spacing: 8px; margin: 25px 0; font-weight: bold; color: #f1c40f;">_ _ _ _ _</div>
+            <div id="single-player-hud" class="single-score-box hidden">
+                Score: <span id="game-score-count">0</span>
+            </div>
+
+            <div id="double-player-hud" class="scoreboard-container hidden">
+                <div class="team-box team-a">
+                    <div>TEAM A</div>
+                    <div id="score-a" class="team-score">0</div>
+                    <button class="score-btn" onclick="adjustScore('a', 1)">+1</button>
+                    <button class="score-btn" onclick="adjustScore('a', -1)">-1</button>
+                </div>
+                <div class="team-box team-b">
+                    <div>TEAM B</div>
+                    <div id="score-b" class="team-score">0</div>
+                    <button class="score-btn" onclick="adjustScore('b', 1)">+1</button>
+                    <button class="score-btn" onclick="adjustScore('b', -1)">-1</button>
+                </div>
+            </div>
+
+            <div class="hint-display-area" id="game-hint-area">
+                </div>
+            
+            <div id="game-underscore-slots" style="font-size: 3rem; letter-spacing: 8px; margin: 15px 0; font-weight: bold; color: #f1c40f;">_ _ _ _ _</div>
             
             <input type="text" id="game-player-input" class="game-letter-input" placeholder="Type answer here" autocomplete="off">
             <br>
             <button class="game-btn" onclick="verifyPlayerAnswer()">SUBMIT ANSWER</button>
-            <div id="game-feedback" style="margin-top: 15px; font-weight: bold; height: 25px; font-size: 1.3rem;"></div>
+            <div id="game-feedback" style="margin-top: 10px; font-weight: bold; height: 25px; font-size: 1.3rem;"></div>
         </div>
     </div>
 
     <script>
         const tableBody = document.getElementById('words-table-body');
+        let scoreSingle = 0;
+        let scoreA = 0;
+        let scoreB = 0;
+        let currentGameMode = 'single';
+
+        function adjustScore(team, amount) {
+            if (team === 'a') {
+                scoreA = Math.max(0, scoreA + amount);
+                document.getElementById('score-a').textContent = scoreA;
+            } else {
+                scoreB = Math.max(0, scoreB + amount);
+                document.getElementById('score-b').textContent = scoreB;
+            }
+        }
 
         function addNewBlankRow(hintVal = "", answerVal = "") {
             const tr = document.createElement('tr');
@@ -199,29 +263,19 @@
             tableBody.appendChild(tr);
         }
 
-        function deleteRow(buttonElement) {
-            const row = buttonElement.closest('tr');
-            row.remove();
-        }
+        function deleteRow(buttonElement) { buttonElement.closest('tr').remove(); }
 
         function clearAllRows() {
-            if(confirm("Are you sure you want to clear your words list?")) {
-                tableBody.innerHTML = "";
-            }
+            if(confirm("Are you sure you want to clear your words list?")) { tableBody.innerHTML = ""; }
         }
 
         function saveConfiguration() {
             const hints = document.querySelectorAll('.row-hint');
             const answers = document.querySelectorAll('.row-answer');
             let profileData = [];
-
             hints.forEach((hintInput, idx) => {
-                profileData.push({
-                    hint: hintInput.value,
-                    answer: answers[idx].value
-                });
+                profileData.push({ hint: hintInput.value, answer: answers[idx].value });
             });
-
             const blob = new Blob([JSON.stringify(profileData, null, 2)], { type: "application/json" });
             const tempAnchor = document.createElement('a');
             tempAnchor.href = URL.createObjectURL(blob);
@@ -229,32 +283,24 @@
             tempAnchor.click();
         }
 
-        function triggerLoadFile() {
-            document.getElementById('hidden-file-picker').click();
-        }
+        function triggerLoadFile() { document.getElementById('hidden-file-picker').click(); }
 
         function loadConfiguration(event) {
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     const importedData = JSON.parse(e.target.result);
                     tableBody.innerHTML = ""; 
-                    importedData.forEach(item => {
-                        addNewBlankRow(item.hint, item.answer);
-                    });
-                } catch (err) {
-                    alert("Error reading file configuration format.");
-                }
+                    importedData.forEach(item => { addNewBlankRow(item.hint, item.answer); });
+                } catch (err) { alert("Error reading file format."); }
             };
             reader.readAsText(file);
         }
 
         let operationalList = [];
         let runningIndex = 0;
-        let runningScore = 0;
 
         function launchGameEngine() {
             const hints = document.querySelectorAll('.row-hint');
@@ -263,10 +309,7 @@
 
             hints.forEach((hintInput, idx) => {
                 if(answers[idx].value.trim() !== "") {
-                    operationalList.push({
-                        hint: hintInput.value,
-                        answer: answers[idx].value.trim()
-                    });
+                    operationalList.push({ hint: hintInput.value.trim(), answer: answers[idx].value.trim() });
                 }
             });
 
@@ -275,9 +318,22 @@
                 return;
             }
 
+            // Set up HUDs based on chosen Mode
+            currentGameMode = document.getElementById('setup-game-mode').value;
+            if(currentGameMode === 'single') {
+                document.getElementById('single-player-hud').classList.remove('hidden');
+                document.getElementById('double-player-hud').classList.add('hidden');
+                scoreSingle = 0;
+                document.getElementById('game-score-count').textContent = "0";
+            } else {
+                document.getElementById('double-player-hud').classList.remove('hidden');
+                document.getElementById('single-player-hud').classList.add('hidden');
+                scoreA = 0; scoreB = 0;
+                document.getElementById('score-a').textContent = "0";
+                document.getElementById('score-b').textContent = "0";
+            }
+
             runningIndex = 0;
-            runningScore = 0;
-            document.getElementById('game-score-count').textContent = "0";
             document.getElementById('game-play-screen').classList.remove('hidden');
             loadGameWord();
         }
@@ -285,13 +341,22 @@
         function loadGameWord() {
             document.getElementById('game-player-input').value = "";
             document.getElementById('game-feedback').textContent = "";
+            const hintArea = document.getElementById('game-hint-area');
+            hintArea.innerHTML = "";
             
             if(runningIndex < operationalList.length) {
                 const currentItem = operationalList[runningIndex];
-                document.getElementById('game-current-hint').textContent = currentItem.hint;
+                
+                // Checks if it's a URL web address link
+                if(currentItem.hint.startsWith("http://") || currentItem.hint.startsWith("https://")) {
+                    hintArea.innerHTML = `<img src="${currentItem.hint}" class="hint-image" alt="Hint Image">`;
+                } else {
+                    hintArea.innerHTML = `<h2 class="hint-text">${currentItem.hint}</h2>`;
+                }
+                
                 document.getElementById('game-underscore-slots').textContent = currentItem.answer.replace(/[a-zA-Z]/g, "_ ");
             } else {
-                alert("Wonderful job! You completed all the items in your Learning Hub! 🎉");
+                alert("Wonderful job! All words completed! 🎉");
                 closeGameEngine();
             }
         }
@@ -299,17 +364,18 @@
         function verifyPlayerAnswer() {
             const inputElement = document.getElementById('game-player-input');
             const feedbackElement = document.getElementById('game-feedback');
-            
             let playerAttempt = inputElement.value.trim().toLowerCase();
             let actualAnswer = operationalList[runningIndex].answer.toLowerCase();
 
             if(playerAttempt === actualAnswer) {
-                runningScore++;
-                document.getElementById('game-score-count').textContent = runningScore;
+                if(currentGameMode === 'single') {
+                    scoreSingle++;
+                    document.getElementById('game-score-count').textContent = scoreSingle;
+                }
                 feedbackElement.style.color = "#2ecc71";
                 feedbackElement.textContent = "Correct! ✨";
                 runningIndex++;
-                setTimeout(loadGameWord, 1200);
+                setTimeout(loadGameWord, 1500);
             } else {
                 feedbackElement.style.color = "#ff4757";
                 feedbackElement.textContent = "Try again! ❌";
@@ -320,9 +386,7 @@
             if(e.key === "Enter") verifyPlayerAnswer();
         });
 
-        function closeGameEngine() {
-            document.getElementById('game-play-screen').classList.add('hidden');
-        }
+        function closeGameEngine() { document.getElementById('game-play-screen').classList.add('hidden'); }
     </script>
 </body>
 </html>
