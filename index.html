@@ -68,7 +68,7 @@
             box-shadow: 0 6px 20px rgba(46,204,113,0.4); width: 100%;
         }
 
-        /* DYNAMIC GAME PLAYBOARD LAYOUT SCREENS */
+        /* PLAYBOARD INTERFACE LAYOUT SCREENS */
         #game-play-screen {
             position: fixed; top:0; left:0; right:0; bottom:0; background: #1a252f;
             z-index: 9999; display: flex; flex-direction: row; padding: 0; margin: 0; overflow: hidden;
@@ -79,7 +79,6 @@
             justify-content: space-between; padding: 30px 20px; position: relative;
         }
         
-        /* Interactive dynamic skins */
         .team-panel-a { background: #c0392b; border-right: 4px solid #fff; }
         .team-panel-b { background: #2980b9; border-left: 4px solid #fff; }
         .solo-active-panel { background: #27ae60 !important; border: none !important; max-width: 800px; margin: 0 auto; border-radius: 20px; height: 90vh; align-self: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
@@ -134,13 +133,19 @@
         
         .feedback-line { margin-top: 8px; font-weight: bold; height: 25px; font-size: 1.2rem; text-align: center; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.4); }
         
+        /* BLOCK PANEL CONTROLS FOR WRONG SLOTS SKIP PAUSE */
+        .panel-blocker {
+            position: absolute; top:0; left:0; right:0; bottom:0;
+            background: rgba(0,0,0,0.4); z-index: 100; border-radius: inherit;
+        }
+
         .btn-exit-game {
             position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
             background: #34495e; color: white; border: 2px solid #fff; padding: 8px 16px;
             font-weight: bold; font-size: 1rem; border-radius: 8px; cursor: pointer; z-index: 10000;
         }
 
-        /* REWARD MYSTERY POPUP SYSTEM */
+        /* REWARD MYSTERY SURPRISE POPUP */
         .reward-overlay {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(26, 37, 47, 0.96); z-index: 500;
@@ -221,7 +226,7 @@
 
         <div class="words-table-container">
             <div style="background: #fff3cd; color: #856404; padding: 10px; border-radius: 5px; margin-bottom: 15px; font-weight: bold;">
-                💡 Milestone Alert: 10th-word surprise reward box applies automatically in both configurations!
+                🚀 Engine Active: +10 Points per Correct Answer. Incorrect inputs show the answer and skip forward immediately!
             </div>
             <table class="words-table">
                 <thead>
@@ -257,6 +262,7 @@
         <button class="btn-exit-game" onclick="closeGameEngine()">❌ EXIT HUBS</button>
         
         <div class="vs-panel team-panel-a" id="panel-container-a">
+            <div id="blocker-a" class="panel-blocker hidden"></div>
             
             <div id="reward-screen-a" class="reward-overlay hidden">
                 <div style="font-size: 3.5rem;">🎁 SURPRISE BOX! 🎁</div>
@@ -285,6 +291,7 @@
         </div>
 
         <div class="vs-panel team-panel-b" id="panel-container-b">
+            <div id="blocker-b" class="panel-blocker hidden"></div>
             
             <div id="reward-screen-b" class="reward-overlay hidden">
                 <div style="font-size: 3.5rem;">🎁 SURPRISE BOX! 🎁</div>
@@ -379,14 +386,6 @@
             anchor.href = URL.createObjectURL(blob); anchor.download = "spelling-hub-data.json"; anchor.click();
         }
 
-        document.getElementById('setup-game-mode').addEventListener('change', function() {
-            if(this.value === 'single') {
-                document.body.style.background = "#2c3e50";
-            } else {
-                document.body.style.background = "#1a252f";
-            }
-        });
-
         function triggerLoadFile() { document.getElementById('hidden-file-picker').click(); }
         function loadConfiguration(event) {
             const file = event.target.files[0]; if (!file) return;
@@ -395,7 +394,7 @@
                 try {
                     const importedData = JSON.parse(e.target.result); tableBody.innerHTML = ""; 
                     importedData.forEach(item => { addNewBlankRow(item.hint, item.answer); });
-                } catch (err) { alert("Error reading configuration architecture."); }
+                } catch (err) { alert("Error reading configuration data."); }
             };
             reader.readAsText(file);
         }
@@ -422,7 +421,6 @@
             teamData.a.wordList = JSON.parse(JSON.stringify(masterList));
             teamData.b.wordList = JSON.parse(JSON.stringify(masterList));
             
-            // Layout Adjustments based on Configuration Selectors
             const panelA = document.getElementById('panel-container-a');
             const panelB = document.getElementById('panel-container-b');
             const labelTitleA = document.getElementById('title-label-a');
@@ -445,6 +443,7 @@
                 document.getElementById(`player-input-${team}`).value = "";
                 document.getElementById(`feedback-${team}`).textContent = "";
                 document.getElementById(`reward-screen-${team}`).classList.add('hidden');
+                document.getElementById(`blocker-${team}`).classList.add('hidden');
             });
 
             document.getElementById('game-play-screen').classList.remove('hidden');
@@ -457,6 +456,7 @@
 
         function loadTeamWord(team) {
             clearInterval(teamData[team].timerObj);
+            document.getElementById(`blocker-${team}`).classList.add('hidden');
             
             if (teamData[team].index === 9 && !teamData[team].triggeredReward) {
                 triggerSurpriseReward(team);
@@ -543,9 +543,10 @@
             fd.style.color = "#ffdddd";
             fd.textContent = `⏰ Out of Time! Answer: ${teamData[team].wordList[teamData[team].index].answer}`;
             
-            teamData[team].score = Math.max(0, teamData[team].score - 1);
+            teamData[team].score = Math.max(0, teamData[team].score - 5);
             document.getElementById(`score-val-${team}`).textContent = teamData[team].score;
 
+            document.getElementById(`blocker-${team}`).classList.remove('hidden');
             teamData[team].index++;
             setTimeout(() => { loadTeamWord(team); }, 2000);
         }
@@ -553,8 +554,12 @@
         function skipTeamWord(team) {
             clearInterval(teamData[team].timerObj);
             document.getElementById(`feedback-${team}`).textContent = "Word Skipped! ⏭️";
+            teamData[team].score = Math.max(0, teamData[team].score - 5);
+            document.getElementById(`score-val-${team}`).textContent = teamData[team].score;
+            
+            document.getElementById(`blocker-${team}`).classList.remove('hidden');
             teamData[team].index++;
-            loadTeamWord(team);
+            setTimeout(() => { loadTeamWord(team); }, 1000);
         }
 
         function updateLiveUnderscores(team, currentInput) {
@@ -623,24 +628,39 @@
         function verifyTeamAnswer(team) {
             const inputField = document.getElementById(`player-input-${team}`);
             const fd = document.getElementById(`feedback-${team}`);
+            const blocker = document.getElementById(`blocker-${team}`);
             
             let playerAttempt = inputField.value.trim().toLowerCase().replace(/\s+/g, '');
-            let actualAnswer = teamData[team].wordList[teamData[team].index].answer.toLowerCase().replace(/\s+/g, '');
+            let correctAnswerString = teamData[team].wordList[teamData[team].index].answer;
+            let actualAnswer = correctAnswerString.toLowerCase().replace(/\s+/g, '');
+
+            // Freeze panel controls briefly on submission to prevent multi-taps
+            blocker.classList.remove('hidden');
 
             if(playerAttempt === actualAnswer) {
                 clearInterval(teamData[team].timerObj);
                 playSound('correct');
                 
-                teamData[team].score++;
+                teamData[team].score += 10; // Award 10 Points
                 document.getElementById(`score-val-${team}`).textContent = teamData[team].score;
                 
-                fd.textContent = "Correct! ✨";
+                fd.style.color = "#a3e635";
+                fd.textContent = "Correct! ✨ (+10)";
                 teamData[team].index++;
                 setTimeout(() => { loadTeamWord(team); }, 1200);
             } else {
+                // INCORRECT LOGIC TRIGGER: Show answer and proceed immediately to keep game flow
+                clearInterval(teamData[team].timerObj);
                 playSound('wrong');
-                fd.textContent = "Try Again! ❌";
-                inputField.select();
+                
+                teamData[team].score = Math.max(0, teamData[team].score - 5); // Small Penalty (-5)
+                document.getElementById(`score-val-${team}`).textContent = teamData[team].score;
+                
+                fd.style.color = "#fca5a5";
+                fd.textContent = `❌ Wrong! Answer: ${correctAnswerString} (-5)`;
+                
+                teamData[team].index++;
+                setTimeout(() => { loadTeamWord(team); }, 2200); // Give them 2 seconds to see correct spelling before moving next
             }
         }
 
@@ -662,20 +682,4 @@
 
             if (doneA && doneB) {
                 let msg = `Match Complete!\n\nTeam A: ${teamData.a.score} Points\nTeam B: ${teamData.b.score} Points\n\n`;
-                if(teamData.a.score > teamData.b.score) msg += "🔴 TEAM A WINS THE VS RACE! 🎉";
-                else if(teamData.b.score > teamData.a.score) msg += "🔵 TEAM B WINS THE VS RACE! 🎉";
-                else msg += "🤝 IT'S A PERFECT DRAW!";
-                
-                alert(msg);
-                closeGameEngine();
-            }
-        }
-
-        function closeGameEngine() { 
-            clearInterval(teamData.a.timerObj);
-            clearInterval(teamData.b.timerObj);
-            document.getElementById('game-play-screen').classList.add('hidden'); 
-        }
-    </script>
-</body>
-</html>
+                if(teamData.a.score > teamData.b.
