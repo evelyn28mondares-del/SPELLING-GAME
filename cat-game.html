@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spelling Cat Game</title>
+    <style>
+        body {
+            margin: 0;
+            background: #222;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+        #gameContainer {
+            position: relative;
+            width: 800px;
+            height: 500px;
+            background-image: url('background.png');
+            background-size: cover;
+            overflow: hidden;
+            border: 4px solid #fff;
+        }
+        #cat {
+            position: absolute;
+            left: 50px;
+            top: 200px;
+            width: 120px; /* Adjust this if your cat is too big/small */
+            height: auto;
+        }
+        .word {
+            position: absolute;
+            right: -150px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.9);
+            color: black;
+            font-weight: bold;
+            border-radius: 20px;
+            font-size: 22px;
+            border: 2px solid #333;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+        }
+        #scoreBoard {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 15px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="gameContainer">
+    <div id="scoreBoard">Score: <span id="score">0</span></div>
+    <img id="cat" src="cat.png" alt="Cat Player">
+</div>
+
+<script>
+    const cat = document.getElementById('cat');
+    const container = document.getElementById('gameContainer');
+    const scoreDisplay = document.getElementById('score');
+    
+    let catY = 200;
+    let score = 0;
+    const speed = 30; // How fast the cat moves up/down
+
+    // Game Words: [Correct Spelling, Incorrect Spelling]
+    const wordPairs = [
+        { correct: "beautiful", wrong: "beautifull" },
+        { correct: "receive", wrong: "recieve" },
+        { correct: "because", wrong: "becuase" },
+        { correct: "friend", wrong: "freind" },
+        { correct: "tomorrow", wrong: "tomorow" }
+    ];
+
+    // Move cat up and down using Arrow Keys
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowUp' && catY > 10) {
+            catY -= speed;
+        } else if (e.key === 'ArrowDown' && catY < 380) {
+            catY += speed;
+        }
+        cat.style.top = catY + 'px';
+    });
+
+    function spawnWords() {
+        // Pick a random word pair
+        const pair = wordPairs[Math.floor(Math.random() * wordPairs.length)];
+        
+        // Randomly decide which lane gets the correct word (Top or Bottom)
+        const correctIsTop = Math.random() > 0.5;
+        
+        if (correctIsTop) {
+            createWordItem(pair.correct, true, 80);   // Top Lane
+            createWordItem(pair.wrong, false, 320);   // Bottom Lane
+        } else {
+            createWordItem(pair.wrong, false, 80);   // Top Lane
+            createWordItem(pair.correct, true, 320);  // Bottom Lane
+        }
+    }
+
+    function createWordItem(text, isCorrect, yPosition) {
+        const wordEl = document.createElement('div');
+        wordEl.classList.add('word');
+        wordEl.innerText = text;
+        wordEl.style.top = yPosition + 'px';
+        container.appendChild(wordEl);
+
+        let wordX = 800; // Start at the right edge
+        
+        let moveInterval = setInterval(() => {
+            wordX -= 3; // How fast words fly across the screen
+            wordEl.style.left = wordX + 'px';
+
+            // Check if cat hits the word
+            if (wordX < 150 && wordX > 30) {
+                // Check if cat is in the same lane vertically
+                if (Math.abs(yPosition - catY) < 70) {
+                    if (isCorrect) {
+                        score += 10;
+                        scoreDisplay.innerText = score;
+                        wordEl.style.background = "#8eff8e"; // Flash green
+                    } else {
+                        score -= 5;
+                        scoreDisplay.innerText = score;
+                        wordEl.style.background = "#ff8e8e"; // Flash red
+                    }
+                    clearInterval(moveInterval);
+                    setTimeout(() => wordEl.remove(), 200);
+                }
+            }
+
+            // Remove word if it goes past the left edge
+            if (wordX < -150) {
+                clearInterval(moveInterval);
+                wordEl.remove();
+            }
+        }, 20);
+    }
+
+    // Spawn new words every 4.5 seconds
+    setInterval(spawnWords, 4500);
+    
+    // Start the first wave
+    spawnWords();
+</script>
+
+</body>
+</html>
