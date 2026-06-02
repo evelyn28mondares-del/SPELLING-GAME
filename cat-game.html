@@ -3,152 +3,351 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Spelling Cat Game</title>
+    <title>Dual Board Spelling Game</title>
     <style>
         body {
             margin: 0;
+            padding: 0;
             background: #222;
+            font-family: 'Arial', sans-serif;
+            color: white;
+            overflow: hidden;
+            user-select: none;
+            height: 100vh;
+        }
+
+        /* Split the screen into two equal columns */
+        .game-screen {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .board {
+            flex: 1;
+            position: relative;
+            height: 100vh;
+            background-image: url('background.png');
+            background-size: cover;
+            background-position: center;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        /* Border line to separate Team A and Team B */
+        #teamA { border-right: 4px solid #fff; }
+        #teamB { border-left: 4px solid #fff; }
+
+        /* UI Headers for Scores, Timers, and Hints */
+        .ui-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            z-index: 100;
+        }
+
+        .ui-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 18px;
+        }
+
+        .team-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffeb3b;
+        }
+
+        .hint-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        .hint-image {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+            background: white;
+            border-radius: 5px;
+        }
+
+        .spelling-blanks {
+            font-size: 28px;
+            font-weight: bold;
+            letter-spacing: 5px;
+            color: #00e676;
+        }
+
+        /* Game Entities */
+        .cat-player {
+            position: absolute;
+            left: 40px;
+            top: 250px;
+            width: 90px;
+            height: auto;
+            z-index: 10;
+        }
+
+        .floating-letter {
+            position: absolute;
+            width: 45px;
+            height: 45px;
+            background: #ffeb3b;
+            color: #333;
+            font-weight: bold;
+            font-size: 26px;
+            text-align: center;
+            line-height: 45px;
+            border-radius: 50%;
+            border: 3px solid #f57f17;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+            z-index: 5;
+        }
+
+        /* On-Screen Touch Controls (Up/Down Buttons) */
+        .controls {
+            position: absolute;
+            bottom: 30px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 200;
+        }
+
+        .btn {
+            width: 70px;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.8);
+            border: 3px solid #333;
+            border-radius: 50%;
+            font-size: 32px;
+            color: black;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            color: white;
-            font-family: Arial, sans-serif;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
         }
-        #gameContainer {
-            position: relative;
-            width: 800px;
-            height: 500px;
-            background-image: url('background.png');
-            background-size: cover;
-            overflow: hidden;
-            border: 4px solid #fff;
-        }
-        #cat {
-            position: absolute;
-            left: 50px;
-            top: 200px;
-            width: 120px; /* Adjust this if your cat is too big/small */
-            height: auto;
-        }
-        .word {
-            position: absolute;
-            right: -150px;
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.9);
-            color: black;
-            font-weight: bold;
-            border-radius: 20px;
-            font-size: 22px;
-            border: 2px solid #333;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-        }
-        #scoreBoard {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            font-size: 24px;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 5px 15px;
-            border-radius: 10px;
+
+        .btn:active {
+            background: #ffeb3b;
+            transform: scale(0.95);
         }
     </style>
 </head>
 <body>
 
-<div id="gameContainer">
-    <div id="scoreBoard">Score: <span id="score">0</span></div>
-    <img id="cat" src="cat.png" alt="Cat Player">
+<div class="game-screen">
+    
+    <div id="teamA" class="board">
+        <div class="ui-panel">
+            <div class="ui-row">
+                <span class="team-title">TEAM A</span>
+                <span>Score: <span id="scoreA">0</span></span>
+                <span>Time: <span id="timerA">60</span>s</span>
+            </div>
+            <div class="hint-container">
+                <img id="imgA" class="hint-image" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='50' height='50'><rect width='50' height='50' fill='%23ddd'/></svg>" alt="Hint">
+                <div id="blanksA" class="spelling-blanks">_ _ _</div>
+            </div>
+        </div>
+
+        <img id="catA" class="cat-player" src="cat.png" alt="Cat A">
+
+        <div class="controls">
+            <div class="btn" id="upBtnA">▲</div>
+            <div class="btn" id="downBtnA">▼</div>
+        </div>
+    </div>
+
+    <div id="teamB" class="board">
+        <div class="ui-panel">
+            <div class="ui-row">
+                <span class="team-title">TEAM B</span>
+                <span>Score: <span id="scoreB">0</span></span>
+                <span>Time: <span id="timerB">60</span>s</span>
+            </div>
+            <div class="hint-container">
+                <img id="imgB" class="hint-image" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='50' height='50'><rect width='50' height='50' fill='%23ddd'/></svg>" alt="Hint">
+                <div id="blanksB" class="spelling-blanks">_ _ _</div>
+            </div>
+        </div>
+
+        <img id="catB" class="cat-player" src="cat.png" alt="Cat B">
+
+        <div class="controls">
+            <div class="btn" id="upBtnB">▲</div>
+            <div class="btn" id="downBtnB">▼</div>
+        </div>
+    </div>
+
 </div>
 
 <script>
-    const cat = document.getElementById('cat');
-    const container = document.getElementById('gameContainer');
-    const scoreDisplay = document.getElementById('score');
-    
-    let catY = 200;
-    let score = 0;
-    const speed = 30; // How fast the cat moves up/down
-
-    // Game Words: [Correct Spelling, Incorrect Spelling]
-    const wordPairs = [
-        { correct: "beautiful", wrong: "beautifull" },
-        { correct: "receive", wrong: "recieve" },
-        { correct: "because", wrong: "becuase" },
-        { correct: "friend", wrong: "freind" },
-        { correct: "tomorrow", wrong: "tomorow" }
+    // ==========================================
+    // PLACEHOLDER DATA STRUCTURE (EDIT LATER)
+    // ==========================================
+    // You can replace this array with your imported learning hub array link style later!
+    const spellingData = [
+        { word: "CAT", image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='50' height='50'><circle cx='25' cy='25' r='20' fill='orange'/></svg>" },
+        { word: "DOG", image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='50' height='50'><circle cx='25' cy='25' r='20' fill='brown'/></svg>" }
     ];
 
-    // Move cat up and down using Arrow Keys
-    window.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowUp' && catY > 10) {
-            catY -= speed;
-        } else if (e.key === 'ArrowDown' && catY < 380) {
-            catY += speed;
-        }
-        cat.style.top = catY + 'px';
-    });
+    // Track state dynamically for both teams
+    const state = {
+        A: { score: 0, timer: 60, wordIdx: 0, letterIdx: 0, catY: 250, activeWord: "" },
+        B: { score: 0, timer: 60, wordIdx: 0, letterIdx: 0, catY: 250, activeWord: "" }
+    };
 
-    function spawnWords() {
-        // Pick a random word pair
-        const pair = wordPairs[Math.floor(Math.random() * wordPairs.length)];
+    const lanePositions = [150, 270, 390];
+    const catSpeed = 40;
+
+    // --- Core Logic Hookups ---
+    function initTeam(teamId) {
+        const team = state[teamId];
+        if(spellingData.length === 0) return;
         
-        // Randomly decide which lane gets the correct word (Top or Bottom)
-        const correctIsTop = Math.random() > 0.5;
-        
-        if (correctIsTop) {
-            createWordItem(pair.correct, true, 80);   // Top Lane
-            createWordItem(pair.wrong, false, 320);   // Bottom Lane
-        } else {
-            createWordItem(pair.wrong, false, 80);   // Top Lane
-            createWordItem(pair.correct, true, 320);  // Bottom Lane
-        }
+        const currentData = spellingData[team.wordIdx];
+        team.activeWord = currentData.word;
+        team.letterIdx = 0;
+
+        document.getElementById(`img${teamId}`).src = currentData.image;
+        updateBlanksDisplay(teamId);
     }
 
-    function createWordItem(text, isCorrect, yPosition) {
-        const wordEl = document.createElement('div');
-        wordEl.classList.add('word');
-        wordEl.innerText = text;
-        wordEl.style.top = yPosition + 'px';
-        container.appendChild(wordEl);
+    function updateBlanksDisplay(teamId) {
+        const team = state[teamId];
+        let displayStr = "";
+        for(let i = 0; i < team.activeWord.length; i++) {
+            if(i < team.letterIdx) {
+                displayStr += team.activeWord[i] + " ";
+            } else {
+                displayStr += "_ ";
+            }
+        }
+        document.getElementById(`blanks${teamId}`).innerText = displayStr.trim();
+    }
 
-        let wordX = 800; // Start at the right edge
+    // --- On-Screen Buttons Configuration ---
+    function moveCat(teamId, direction) {
+        const team = state[teamId];
+        if (direction === 'up' && team.catY > 130) {
+            team.catY -= catSpeed;
+        } else if (direction === 'down' && team.catY < 420) {
+            team.catY += catSpeed;
+        }
+        document.getElementById(`cat${teamId}`).style.top = team.catY + 'px';
+    }
+
+    document.getElementById('upBtnA').addEventListener('click', () => moveCat('A', 'up'));
+    document.getElementById('downBtnA').addEventListener('click', () => moveCat('A', 'down'));
+    document.getElementById('upBtnB').addEventListener('click', () => moveCat('B', 'up'));
+    document.getElementById('downBtnB').addEventListener('click', () => moveCat('B', 'down'));
+
+    // --- Letter Spawning & Collision Loop Framework ---
+    function spawnLetterForTeam(teamId) {
+        const board = document.getElementById(`team${teamId}`);
+        const team = state[teamId];
         
-        let moveInterval = setInterval(() => {
-            wordX -= 3; // How fast words fly across the screen
-            wordEl.style.left = wordX + 'px';
+        const letterEl = document.createElement('div');
+        letterEl.classList.add('floating-letter');
+        
+        // Pick character based on correctness probability
+        let isCorrect = Math.random() > 0.5;
+        let char = "";
+        if (isCorrect && team.activeWord) {
+            char = team.activeWord[team.letterIdx];
+        } else {
+            const alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            char = alpha[Math.floor(Math.random() * alpha.length)];
+        }
+        
+        letterEl.innerText = char;
+        let yPos = lanePositions[Math.floor(Math.random() * lanePositions.length)];
+        letterEl.style.top = yPos + 'px';
+        letterEl.style.right = "-50px";
+        board.appendChild(letterEl);
 
-            // Check if cat hits the word
-            if (wordX < 150 && wordX > 30) {
-                // Check if cat is in the same lane vertically
-                if (Math.abs(yPosition - catY) < 70) {
-                    if (isCorrect) {
-                        score += 10;
-                        scoreDisplay.innerText = score;
-                        wordEl.style.background = "#8eff8e"; // Flash green
-                    } else {
-                        score -= 5;
-                        scoreDisplay.innerText = score;
-                        wordEl.style.background = "#ff8e8e"; // Flash red
-                    }
-                    clearInterval(moveInterval);
-                    setTimeout(() => wordEl.remove(), 200);
+        let currentPos = 0; 
+        const boardWidth = board.offsetWidth;
+
+        let animationLoop = setInterval(() => {
+            currentPos += 4;
+            letterEl.style.right = currentPos + 'px';
+
+            // Calculate matching X coords for touch checking
+            let letterLeft = boardWidth - currentPos - 45;
+
+            if (letterLeft < 130 && letterLeft > 40) {
+                if (Math.abs(yPos - team.catY) < 50) {
+                    clearInterval(animationLoop);
+                    letterEl.remove();
+                    evaluateCaughtLetter(teamId, char);
                 }
             }
 
-            // Remove word if it goes past the left edge
-            if (wordX < -150) {
-                clearInterval(moveInterval);
-                wordEl.remove();
+            if (currentPos > boardWidth + 50) {
+                clearInterval(animationLoop);
+                letterEl.remove();
             }
         }, 20);
     }
 
-    // Spawn new words every 4.5 seconds
-    setInterval(spawnWords, 4500);
+    function evaluateCaughtLetter(teamId, letter) {
+        const team = state[teamId];
+        let targetLetter = team.activeWord[team.letterIdx];
+
+        if (letter === targetLetter) {
+            team.letterIdx++;
+            updateBlanksDisplay(teamId);
+
+            // Trigger immediate switch when item finishes
+            if (team.letterIdx === team.activeWord.length) {
+                team.score += 10;
+                document.getElementById(`score${teamId}`).innerText = team.score;
+                
+                // Advance to next word item independently
+                team.wordIdx = (team.wordIdx + 1) % spellingData.length;
+                initTeam(teamId);
+            }
+        }
+    }
+
+    // --- Countdown Clocks Setup ---
+    function startClocks() {
+        setInterval(() => {
+            if (state.A.timer > 0) {
+                state.A.timer--;
+                document.getElementById('timerA').innerText = state.A.timer;
+            }
+            if (state.B.timer > 0) {
+                state.B.timer--;
+                document.getElementById('timerB').innerText = state.B.timer;
+            }
+        }, 1000);
+    }
+
+    // --- Start Global Loops ---
+    initTeam('A');
+    initTeam('B');
+    startClocks();
     
-    // Start the first wave
-    spawnWords();
+    setInterval(() => spawnLetterForTeam('A'), 2000);
+    setInterval(() => spawnLetterForTeam('B'), 2000);
 </script>
 
 </body>
