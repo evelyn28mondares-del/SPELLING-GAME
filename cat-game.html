@@ -91,12 +91,12 @@
             color: #00e676;
         }
 
-        /* Game Entities */
+        /* Game Entities - CAT IS NOW BIGGER (200px) */
         .cat-player {
             position: absolute;
             left: 40px;
             top: 250px;
-            width: 90px;
+            width: 200px;
             height: auto;
             z-index: 10;
         }
@@ -201,7 +201,6 @@
     // ==========================================
     // PLACEHOLDER DATA STRUCTURE (EDIT LATER)
     // ==========================================
-    // You can replace this array with your imported learning hub array link style later!
     const spellingData = [
         { word: "CAT", image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='50' height='50'><circle cx='25' cy='25' r='20' fill='orange'/></svg>" },
         { word: "DOG", image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='50' height='50'><circle cx='25' cy='25' r='20' fill='brown'/></svg>" }
@@ -266,7 +265,6 @@
         const letterEl = document.createElement('div');
         letterEl.classList.add('floating-letter');
         
-        // Pick character based on correctness probability
         let isCorrect = Math.random() > 0.5;
         let char = "";
         if (isCorrect && team.activeWord) {
@@ -289,11 +287,10 @@
             currentPos += 4;
             letterEl.style.right = currentPos + 'px';
 
-            // Calculate matching X coords for touch checking
             let letterLeft = boardWidth - currentPos - 45;
 
-            if (letterLeft < 130 && letterLeft > 40) {
-                if (Math.abs(yPos - team.catY) < 50) {
+            if (letterLeft < 200 && letterLeft > 40) {
+                if (Math.abs(yPos - team.catY) < 60) {
                     clearInterval(animationLoop);
                     letterEl.remove();
                     evaluateCaughtLetter(teamId, char);
@@ -315,12 +312,10 @@
             team.letterIdx++;
             updateBlanksDisplay(teamId);
 
-            // Trigger immediate switch when item finishes
             if (team.letterIdx === team.activeWord.length) {
                 team.score += 10;
                 document.getElementById(`score${teamId}`).innerText = team.score;
                 
-                // Advance to next word item independently
                 team.wordIdx = (team.wordIdx + 1) % spellingData.length;
                 initTeam(teamId);
             }
