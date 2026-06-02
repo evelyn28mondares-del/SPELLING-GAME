@@ -1,3 +1,15 @@
+Option B (Scrambled Letters) is an excellent choice! It makes the game highly interactive, perfect for touchscreens or smartboards, and removes the need for students to type out everything on a keyboard.
+
+How this works now:
+Scrambled Buttons: Every time a new word loads, the game takes the correct answer, splits it into letters, shuffles them up, and creates individual clickable button blocks.
+
+Keyboard Support: The input box is still there, so students can either click the letter buttons or type using a physical keyboard.
+
+Responsive Interface: Clicking a letter block automatically types it right into the input field!
+
+Here is your updated, complete HTML code ready to be saved and run:
+
+HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -85,6 +97,10 @@
         }
         .team-box {
             flex: 1; padding: 10px; border-radius: 10px; text-align: center; font-weight: bold;
+            border: 3px solid transparent; transition: all 0.3s ease;
+        }
+        .team-box.active-turn {
+            border-color: #f1c40f; box-shadow: 0 0 15px #f1c40f; transform: scale(1.03);
         }
         .team-a { background: #e74c3c; color: white; }
         .team-b { background: #3498db; color: white; }
@@ -100,6 +116,14 @@
             margin-bottom: 20px; font-size: 1.4rem; font-weight: bold;
         }
 
+        /* LIVE TIMER VISUAL BOX */
+        .timer-display-box {
+            background: #e67e22; border-radius: 10px; padding: 8px 15px;
+            margin-bottom: 15px; font-size: 1.3rem; font-weight: bold; display: inline-block;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .timer-low { background: #c0392b !important; animation: shake 0.5s infinite !important; }
+
         .hint-display-area {
             min-height: 150px; display: flex; align-items: center; justify-content: center; margin: 15px 0;
         }
@@ -107,6 +131,22 @@
             max-width: 100%; max-height: 220px; border-radius: 10px; border: 4px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
         .hint-text { font-size: 2.8rem; margin: 0; font-weight: bold; color: #fff; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+
+        /* SCRAMBLED LETTER BUTTON CONTAINER */
+        .scrambled-letters-container {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin: 15px 0; min-height: 55px;
+        }
+        .letter-block-btn {
+            background: #f1c40f; color: #2c3e50; border: none; font-size: 1.8rem; font-weight: bold;
+            min-width: 50px; height: 50px; border-radius: 8px; cursor: pointer;
+            box-shadow: 0 4px 0 #d35400; transition: all 0.1s ease; display: flex; align-items: center; justify-content: center; padding: 0 12px;
+        }
+        .letter-block-btn:active {
+            transform: translateY(4px); box-shadow: none;
+        }
+        .letter-clear-btn {
+            background: #95a5a6; color: white; box-shadow: 0 4px 0 #7f8c8d;
+        }
 
         .game-letter-input {
             width: 80%; padding: 12px; font-size: 1.5rem; text-align: center;
@@ -121,6 +161,20 @@
             border: none; padding: 12px 25px; font-weight: bold; font-size: 1.1rem; border-radius: 8px; cursor: pointer;
         }
         .hidden { display: none !important; }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(0px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(2px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(2px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(0deg); }
+        }
     </style>
 </head>
 <body>
@@ -210,13 +264,13 @@
             </div>
 
             <div id="double-player-hud" class="scoreboard-container hidden">
-                <div class="team-box team-a">
+                <div id="team-box-a" class="team-box team-a">
                     <div>TEAM A</div>
                     <div id="score-a" class="team-score">0</div>
                     <button class="score-btn" onclick="adjustScore('a', 1)">+1</button>
                     <button class="score-btn" onclick="adjustScore('a', -1)">-1</button>
                 </div>
-                <div class="team-box team-b">
+                <div id="team-box-b" class="team-box team-b">
                     <div>TEAM B</div>
                     <div id="score-b" class="team-score">0</div>
                     <button class="score-btn" onclick="adjustScore('b', 1)">+1</button>
@@ -224,12 +278,17 @@
                 </div>
             </div>
 
-            <div class="hint-display-area" id="game-hint-area">
-                </div>
+            <div id="timer-box" class="timer-display-box">
+                ⏱️ Time Left: <span id="game-live-countdown">60</span>s
+            </div>
+
+            <div class="hint-display-area" id="game-hint-area"></div>
             
             <div id="game-underscore-slots" style="font-size: 3rem; letter-spacing: 8px; margin: 15px 0; font-weight: bold; color: #f1c40f;">_ _ _ _ _</div>
             
-            <input type="text" id="game-player-input" class="game-letter-input" placeholder="Type answer here" autocomplete="off">
+            <div id="game-scrambled-options" class="scrambled-letters-container"></div>
+
+            <input type="text" id="game-player-input" class="game-letter-input" placeholder="Type or click letters above" autocomplete="off">
             <br>
             <button class="game-btn" onclick="verifyPlayerAnswer()">SUBMIT ANSWER</button>
             <div id="game-feedback" style="margin-top: 10px; font-weight: bold; height: 25px; font-size: 1.3rem;"></div>
@@ -242,6 +301,12 @@
         let scoreA = 0;
         let scoreB = 0;
         let currentGameMode = 'single';
+        
+        // Timer Variables
+        let timerCountdown; 
+        let currentSecondsLeft = 60;
+        let setupTimeLimit = 60;
+        let currentActiveTeam = 'a'; // Tracks team turns 'a' or 'b'
 
         function adjustScore(team, amount) {
             if (team === 'a') {
@@ -318,6 +383,9 @@
                 return;
             }
 
+            // Get selected input setting timer values
+            setupTimeLimit = parseInt(document.getElementById('setup-timer').value) || 60;
+
             // Set up HUDs based on chosen Mode
             currentGameMode = document.getElementById('setup-game-mode').value;
             if(currentGameMode === 'single') {
@@ -331,6 +399,10 @@
                 scoreA = 0; scoreB = 0;
                 document.getElementById('score-a').textContent = "0";
                 document.getElementById('score-b').textContent = "0";
+                
+                // Initialize Team A starts first
+                currentActiveTeam = 'a';
+                updateTeamTurnVisuals();
             }
 
             runningIndex = 0;
@@ -338,11 +410,72 @@
             loadGameWord();
         }
 
+        function updateTeamTurnVisuals() {
+            if (currentGameMode === 'double') {
+                if (currentActiveTeam === 'a') {
+                    document.getElementById('team-box-a').classList.add('active-turn');
+                    document.getElementById('team-box-b').classList.remove('active-turn');
+                } else {
+                    document.getElementById('team-box-b').classList.add('active-turn');
+                    document.getElementById('team-box-a').classList.remove('active-turn');
+                }
+            }
+        }
+
+        function runLiveCountdown() {
+            clearInterval(timerCountdown);
+            currentSecondsLeft = setupTimeLimit;
+            
+            const timerDisplayElement = document.getElementById('game-live-countdown');
+            const timerBoxElement = document.getElementById('timer-box');
+            
+            timerDisplayElement.textContent = currentSecondsLeft;
+            timerBoxElement.classList.remove('timer-low');
+
+            timerCountdown = setInterval(() => {
+                currentSecondsLeft--;
+                timerDisplayElement.textContent = currentSecondsLeft;
+
+                // Visual panic indicator when time drops to 5 seconds or less
+                if (currentSecondsLeft <= 5) {
+                    timerBoxElement.classList.add('timer-low');
+                }
+
+                if (currentSecondsLeft <= 0) {
+                    clearInterval(timerCountdown);
+                    handleTimeOutPenalty();
+                }
+            }, 1000);
+        }
+
+        function handleTimeOutPenalty() {
+            const feedbackElement = document.getElementById('game-feedback');
+            feedbackElement.style.color = "#ff4757";
+            feedbackElement.textContent = `Time's Up! Answer was: ${operationalList[runningIndex].answer} ⏰`;
+            
+            // Automatic deduction scoring logic
+            if (currentGameMode === 'single') {
+                scoreSingle = Math.max(0, scoreSingle - 1);
+                document.getElementById('game-score-count').textContent = scoreSingle;
+            } else {
+                adjustScore(currentActiveTeam, -1);
+                // Alternate turn setup
+                currentActiveTeam = (currentActiveTeam === 'a') ? 'b' : 'a';
+                updateTeamTurnVisuals();
+            }
+
+            runningIndex++;
+            setTimeout(loadGameWord, 2500);
+        }
+
         function loadGameWord() {
+            clearInterval(timerCountdown);
             document.getElementById('game-player-input').value = "";
             document.getElementById('game-feedback').textContent = "";
             const hintArea = document.getElementById('game-hint-area');
+            const optionsArea = document.getElementById('game-scrambled-options');
             hintArea.innerHTML = "";
+            optionsArea.innerHTML = "";
             
             if(runningIndex < operationalList.length) {
                 const currentItem = operationalList[runningIndex];
@@ -355,10 +488,54 @@
                 }
                 
                 document.getElementById('game-underscore-slots').textContent = currentItem.answer.replace(/[a-zA-Z]/g, "_ ");
+                
+                // GENERATE SCRAMBLED LETTER BUTTON BLOCKS
+                generateScrambledLetterOptions(currentItem.answer);
+
+                // Focus element automatically & trigger clock sequence
+                document.getElementById('game-player-input').focus();
+                runLiveCountdown();
             } else {
                 alert("Wonderful job! All words completed! 🎉");
                 closeGameEngine();
             }
+        }
+
+        function generateScrambledLetterOptions(word) {
+            const optionsArea = document.getElementById('game-scrambled-options');
+            
+            // Clean out white spaces, break word into uppercase letters array
+            let lettersArray = word.replace(/\s+/g, '').toUpperCase().split('');
+            
+            // Shuffle array using Fisher-Yates algorithm logic
+            for (let i = lettersArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [lettersArray[i], lettersArray[j]] = [lettersArray[j], lettersArray[i]];
+            }
+
+            // Create clickable button items for each letter
+            lettersArray.forEach(letter => {
+                const btn = document.createElement('button');
+                btn.className = "letter-block-btn";
+                btn.textContent = letter;
+                btn.onclick = function() {
+                    const inputField = document.getElementById('game-player-input');
+                    inputField.value += letter; // Inject clicked letter directly into input field
+                    inputField.focus();
+                };
+                optionsArea.appendChild(btn);
+            });
+
+            // Add a Backspace/Clear helper button block
+            const clearBtn = document.createElement('button');
+            clearBtn.className = "letter-block-btn letter-clear-btn";
+            clearBtn.textContent = "⌫ CLEAR";
+            clearBtn.onclick = function() {
+                const inputField = document.getElementById('game-player-input');
+                inputField.value = "";
+                inputField.focus();
+            };
+            optionsArea.appendChild(clearBtn);
         }
 
         function verifyPlayerAnswer() {
@@ -368,10 +545,20 @@
             let actualAnswer = operationalList[runningIndex].answer.toLowerCase();
 
             if(playerAttempt === actualAnswer) {
+                clearInterval(timerCountdown); // Freeze timer immediately on correct entry
+                
+                // AUTOMATED SCORING ENGINE
                 if(currentGameMode === 'single') {
                     scoreSingle++;
                     document.getElementById('game-score-count').textContent = scoreSingle;
+                } else {
+                    // Automatically add +1 point to current team turn profile
+                    adjustScore(currentActiveTeam, 1);
+                    // Alternate matching turn parameters
+                    currentActiveTeam = (currentActiveTeam === 'a') ? 'b' : 'a';
+                    updateTeamTurnVisuals();
                 }
+
                 feedbackElement.style.color = "#2ecc71";
                 feedbackElement.textContent = "Correct! ✨";
                 runningIndex++;
@@ -379,6 +566,7 @@
             } else {
                 feedbackElement.style.color = "#ff4757";
                 feedbackElement.textContent = "Try again! ❌";
+                inputElement.select(); // Highlight mistake for fast corrections
             }
         }
 
@@ -386,7 +574,10 @@
             if(e.key === "Enter") verifyPlayerAnswer();
         });
 
-        function closeGameEngine() { document.getElementById('game-play-screen').classList.add('hidden'); }
+        function closeGameEngine() { 
+            clearInterval(timerCountdown);
+            document.getElementById('game-play-screen').classList.add('hidden'); 
+        }
     </script>
 </body>
 </html>
