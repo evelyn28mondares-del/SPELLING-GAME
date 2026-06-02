@@ -1,3 +1,15 @@
+You got it! It's much easier to just swap the whole file than to hunt down individual lines.
+
+This complete HTML code has the guaranteed giant cartoon test cat baked right into both tracks.
+
+🛠️ What to do right now:
+Go to your editor page: https://github.com/evelyn28mondares-del/SPELLING-GAME/edit/main/cat-game.html
+
+Select all the old text and delete it completely.
+
+Copy and paste this entire block of code into your blank file:
+
+HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -260,7 +272,7 @@
                         <div id="blanksA" class="spelling-blanks">_ _ _</div>
                     </div>
                 </div>
-                <img id="catA" class="cat-player" src="cat.png" alt="Cat A">
+                <img id="catA" class="cat-player" src="https://openclipart.org/image/400px/191873" alt="Cat A">
                 <div class="controls">
                     <div class="btn-ctrl" id="upBtnA">▲</div>
                     <div class="btn-ctrl" id="downBtnA">▼</div>
@@ -279,7 +291,7 @@
                         <div id="blanksB" class="spelling-blanks">_ _ _</div>
                     </div>
                 </div>
-                <img id="catB" class="cat-player" src="cat.png" alt="Cat B">
+                <img id="catB" class="cat-player" src="https://openclipart.org/image/400px/191873" alt="Cat B">
                 <div class="controls">
                     <div class="btn-ctrl" id="upBtnB">▲</div>
                     <div class="btn-ctrl" id="downBtnB">▼</div>
@@ -290,7 +302,6 @@
     </div>
 
     <script>
-        // Setup base data storage keys distinctly for the cat game profile
         let dataset = [
             { hint: "Fruit", answer: "Apple" },
             { hint: "Animal", answer: "Zebra" }
@@ -379,10 +390,6 @@
         if(cached) dataset = JSON.parse(cached);
         renderTable();
 
-
-        // =========================================================
-        // ENGINE LIVE ARROW GAME ENGINE RUNTIME
-        // =========================================================
         let gameRuntimeData = [];
         let runningState = {
             A: { score: 0, timer: 60, wordIdx: 0, letterIdx: 0, catY: 250, activeWord: "", activeHint: "", loops: [] },
