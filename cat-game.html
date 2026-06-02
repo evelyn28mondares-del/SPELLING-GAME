@@ -3,347 +3,619 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dual Board Spelling Game</title>
+    <title>Teacher Evelyn Learning Hub - Multi-Mode VS</title>
     <style>
+        * { box-sizing: border-box; font-family: 'Arial', sans-serif; }
         body {
             margin: 0;
-            padding: 0;
-            background: #222;
-            font-family: 'Arial', sans-serif;
-            color: white;
-            overflow: hidden;
-            user-select: none;
-            height: 100vh;
-        }
-
-        /* Split the screen into two equal columns */
-        .game-screen {
+            padding: 20px;
+            background: #2c3e50;
+            color: #333;
             display: flex;
-            width: 100vw;
-            height: 100vh;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            overflow-y: auto;
         }
 
-        .board {
-            flex: 1;
-            position: relative;
-            height: 100vh;
-            background-image: url('background.png');
-            background-size: cover;
-            background-position: center;
-            overflow: hidden;
-            box-sizing: border-box;
-        }
-
-        /* Border line to separate Team A and Team B */
-        #teamA { border-right: 4px solid #fff; }
-        #teamB { border-left: 4px solid #fff; }
-
-        /* UI Headers for Scores, Timers, and Hints */
-        .ui-panel {
-            position: absolute;
-            top: 0;
-            left: 0;
+        /* HUB STYLING */
+        .hub-container {
+            background: #f5f6fa;
             width: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 10px 20px;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            z-index: 100;
+            max-width: 950px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 5px solid #fff;
+            overflow: hidden;
+            margin-bottom: 50px;
         }
-
-        .ui-row {
+        .hub-header {
+            background: #34495e;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            border-bottom: 5px solid #e74c3c;
+        }
+        .hub-header h1 { margin: 0; font-size: 2.5rem; font-family: 'Georgia', serif; }
+        .hub-header h2 { margin: 5px 0 0 0; font-size: 1.2rem; color: #f1c40f; }
+        
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            padding: 20px;
+            background: #fff;
+        }
+        .setting-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ecf0f1;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border-left: 5px solid #3498db;
+        }
+        .setting-item.full-width {
+            grid-column: span 2;
+            background: #e8f8f5;
+            border-left-color: #2ecc71;
+        }
+        .setting-item label { font-weight: bold; font-size: 0.95rem; }
+        .setting-item input[type="number"], .setting-item select {
+            padding: 6px;
+            width: 150px;
+            border-radius: 5px;
+            border: 1px solid #bdc3c7;
+            text-align: center;
+            font-weight: bold;
+        }
+        .setting-item select { width: 220px; text-align-last: center; }
+        
+        .danger-zone {
+            grid-column: span 2;
+            background: #fdf2f2;
+            border: 1px dashed #ec7063;
+            padding: 10px 15px;
+            border-radius: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 18px;
+        }
+        .btn-danger {
+            background: #e74c3c; color: white; border: none; padding: 6px 12px;
+            border-radius: 4px; font-weight: bold; cursor: pointer;
         }
 
-        .team-title {
-            font-size: 24px;
-            font-weight: bold;
-            color: #ffeb3b;
-        }
-
-        .hint-container {
+        .action-banner {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 5px;
-            border-radius: 5px;
-        }
-
-        .hint-image {
-            width: 50px;
-            height: 50px;
-            object-fit: contain;
-            background: white;
-            border-radius: 5px;
-        }
-
-        .spelling-blanks {
-            font-size: 28px;
-            font-weight: bold;
-            letter-spacing: 5px;
-            color: #00e676;
-        }
-
-        /* Game Entities - CAT IS NOW BIGGER (200px) */
-        .cat-player {
-            position: absolute;
-            left: 40px;
-            top: 250px;
-            width: 200px;
-            height: auto;
-            z-index: 10;
-        }
-
-        .floating-letter {
-            position: absolute;
-            width: 45px;
-            height: 45px;
-            background: #ffeb3b;
-            color: #333;
-            font-weight: bold;
-            font-size: 26px;
-            text-align: center;
-            line-height: 45px;
-            border-radius: 50%;
-            border: 3px solid #f57f17;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-            z-index: 5;
-        }
-
-        /* On-Screen Touch Controls (Up/Down Buttons) */
-        .controls {
-            position: absolute;
-            bottom: 30px;
-            left: 20px;
-            display: flex;
-            flex-direction: column;
             gap: 15px;
-            z-index: 200;
+            padding: 0 20px;
+            background: #fff;
+        }
+        .btn-action {
+            padding: 10px 20px; border-radius: 20px; border: none; font-weight: bold;
+            color: white; cursor: pointer; display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn-save { background: #2980b9; }
+        .btn-load { background: #9b59b6; }
+
+        .info-bar {
+            margin: 20px; padding: 12px; background: #fef9e7;
+            border-left: 5px solid #f1c40f; font-size: 0.9rem; font-weight: bold;
+            color: #b7950b; border-radius: 4px;
         }
 
-        .btn {
-            width: 70px;
-            height: 70px;
-            background: rgba(255, 255, 255, 0.8);
-            border: 3px solid #333;
-            border-radius: 50%;
-            font-size: 32px;
-            color: black;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        .word-table-container { padding: 0 20px 20px 20px; background: #fff; }
+        .word-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        .word-table th { background: #34495e; color: white; padding: 10px; text-align: center; }
+        .word-table td { padding: 8px; border-bottom: 1px solid #ddd; text-align: center; }
+        .word-table input[type="text"] {
+            width: 95%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; text-align: center;
+        }
+        .btn-del {
+            background: #e74c3c; color: white; border: none; width: 30px; height: 30px;
+            border-radius: 50%; font-weight: bold; cursor: pointer;
+        }
+        .btn-add {
+            background: #34495e; color: white; border: none; padding: 8px 16px;
+            border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 10px;
         }
 
-        .btn:active {
-            background: #ffeb3b;
-            transform: scale(0.95);
+        .launch-box { padding: 20px; background: #fff; text-align: center; border-top: 1px solid #ddd; }
+        .btn-launch {
+            background: #2ecc71; color: white; border: none; padding: 15px 40px;
+            font-size: 1.4rem; font-weight: bold; border-radius: 30px; cursor: pointer;
+            width: 100%; max-width: 600px; box-shadow: 0 5px 15px rgba(46,204,113,0.4);
+            transition: transform 0.1s;
+        }
+        .btn-launch:active { transform: scale(0.98); }
+
+        /* ================= GAMEPLAY RUNTIME ARENA ================= */
+        #gameArena {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #111; z-index: 9999;
+            user-select: none; overflow: hidden;
+        }
+        .split-screen { display: flex; width: 100vw; height: 100vh; }
+        
+        .board {
+            flex: 1; position: relative; height: 100vh;
+            background-image: url('background.png'); background-size: cover; background-position: center;
+            overflow: hidden; box-sizing: border-box;
+        }
+        #teamA { border-right: 4px solid #fff; }
+        #teamB { border-left: 4px solid #fff; }
+
+        .ui-panel {
+            position: absolute; top: 0; left: 0; width: 100%;
+            background: rgba(0, 0, 0, 0.85); padding: 12px 20px;
+            box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; z-index: 100;
+            border-bottom: 3px solid rgba(255,255,255,0.2);
+        }
+        .ui-row { display: flex; justify-content: space-between; align-items: center; font-size: 1.2rem; font-weight: bold; }
+        .team-title { font-size: 1.7rem; font-weight: bold; color: #f1c40f; letter-spacing: 1px; }
+        .hint-container {
+            display: flex; align-items: center; justify-content: center; gap: 25px;
+            background: rgba(255, 255, 255, 0.12); padding: 8px; border-radius: 8px;
+        }
+        .hint-image { width: 65px; height: 65px; object-fit: contain; background: white; border-radius: 8px; padding: 2px; }
+        .spelling-blanks { font-size: 2.2rem; font-weight: bold; letter-spacing: 6px; color: #2ecc71; }
+
+        .cat-player { position: absolute; left: 40px; top: 250px; width: 200px; height: auto; z-index: 10; transition: top 0.08s ease-out; }
+        
+        .floating-letter {
+            position: absolute; width: 55px; height: 55px; background: #f1c40f; color: #2c3e50;
+            font-weight: bold; font-size: 2rem; text-align: center; line-height: 55px;
+            border-radius: 50%; border: 3px solid #d35400; box-shadow: 2px 4px 8px rgba(0,0,0,0.4); z-index: 5;
+        }
+
+        .controls { position: absolute; bottom: 40px; left: 30px; display: flex; flex-direction: column; gap: 20px; z-index: 200; }
+        .btn-ctrl {
+            width: 85px; height: 85px; background: rgba(255, 255, 255, 0.85); border: 4px solid #2c3e50;
+            border-radius: 50%; font-size: 2.5rem; color: #2c3e50; display: flex; justify-content: center;
+            align-items: center; cursor: pointer; box-shadow: 0 6px 12px rgba(0,0,0,0.4); touch-action: manipulation;
+        }
+        .btn-ctrl:active { background: #f1c40f; transform: scale(0.92); }
+
+        .game-over-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+        .game-over-screen h2 { font-size: 3rem; color: #e74c3c; margin: 0 0 10px 0; }
+        .game-over-screen p { font-size: 1.8rem; margin: 0 0 20px 0; }
+        .btn-restart {
+            background: #3498db; color: white; border: none; padding: 12px 30px;
+            font-size: 1.2rem; font-weight: bold; border-radius: 8px; cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-<div class="game-screen">
-    
-    <div id="teamA" class="board">
-        <div class="ui-panel">
-            <div class="ui-row">
-                <span class="team-title">TEAM A</span>
-                <span>Score: <span id="scoreA">0</span></span>
-                <span>Time: <span id="timerA">60</span>s</span>
+    <div class="hub-container" id="hubPanel">
+        <div class="hub-header">
+            <h1>Spelling Game Center</h1>
+            <h2>Teacher Evelyn Learning Hub</h2>
+        </div>
+
+        <div class="settings-grid">
+            <div class="setting-item full-width">
+                <label>Select Active Mode:</label>
+                <select id="gameMode">
+                    <option value="dual">Dual Team (Split Screen Simultaneous)</option>
+                </select>
             </div>
-            <div class="hint-container">
-                <img id="imgA" class="hint-image" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='50' height='50'><rect width='50' height='50' fill='%23ddd'/></svg>" alt="Hint">
-                <div id="blanksA" class="spelling-blanks">_ _ _</div>
+            <div class="setting-item">
+                <label>Timer Per Team:</label>
+                <input type="number" id="gameTimer" value="60">
+            </div>
+            <div class="setting-item">
+                <label>Speed Tuning:</label>
+                <select id="gameSpeed">
+                    <option value="normal">Normal</option>
+                    <option value="fast">Fast Run</option>
+                    <option value="turbo">Turbo Chaos</option>
+                </select>
+            </div>
+            <div class="danger-zone">
+                <span>Clear Hub Workspace Profile:</span>
+                <button class="btn-danger" id="btnErase">ERASE DATA</button>
             </div>
         </div>
 
-        <img id="catA" class="cat-player" src="cat.png" alt="Cat A">
+        <div class="action-banner">
+            <button class="btn-action btn-save" id="btnSave">💾 SAVE FILE</button>
+            <button class="btn-action btn-load" id="btnLoad">📂 LOAD FILE</button>
+            <input type="file" id="fileImporter" style="display: none;" accept=".json">
+        </div>
 
-        <div class="controls">
-            <div class="btn" id="upBtnA">▲</div>
-            <div class="btn" id="downBtnA">▼</div>
+        <div class="info-bar">
+            🚀 Engine Active: +10 Points per Correct Word. The next item WILL APPEAR immediately upon completion!
+        </div>
+
+        <div class="word-table-container">
+            <table class="word-table">
+                <thead>
+                    <tr>
+                        <th style="width: 45%;">Hint / Image URL</th>
+                        <th style="width: 45%;">Answer Target</th>
+                        <th style="width: 10%;">Del</th>
+                    </tr>
+                </thead>
+                <tbody id="wordListBody">
+                    </tbody>
+            </table>
+            <button class="btn-add" id="btnAddWord">+ ADD WORD</button>
+        </div>
+
+        <div class="launch-box">
+            <button class="btn-launch" id="btnLaunch">SAVE & LAUNCH SELECTION</button>
         </div>
     </div>
 
-    <div id="teamB" class="board">
-        <div class="ui-panel">
-            <div class="ui-row">
-                <span class="team-title">TEAM B</span>
-                <span>Score: <span id="scoreB">0</span></span>
-                <span>Time: <span id="timerB">60</span>s</span>
+    <div id="gameArena">
+        <div class="split-screen">
+            
+            <div id="teamA" class="board">
+                <div class="ui-panel">
+                    <div class="ui-row">
+                        <span class="team-title">TEAM A</span>
+                        <span>Score: <span id="scoreA">0</span></span>
+                        <span>Time: <span id="timerA">60</span>s</span>
+                    </div>
+                    <div class="hint-container">
+                        <img id="imgA" class="hint-image" src="" alt="Hint">
+                        <div id="blanksA" class="spelling-blanks">_ _ _</div>
+                    </div>
+                </div>
+                <img id="catA" class="cat-player" src="cat.png" alt="Cat A">
+                <div class="controls">
+                    <div class="btn-ctrl" id="upBtnA">▲</div>
+                    <div class="btn-ctrl" id="downBtnA">▼</div>
+                </div>
             </div>
-            <div class="hint-container">
-                <img id="imgB" class="hint-image" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='50' height='50'><rect width='50' height='50' fill='%23ddd'/></svg>" alt="Hint">
-                <div id="blanksB" class="spelling-blanks">_ _ _</div>
+
+            <div id="teamB" class="board">
+                <div class="ui-panel">
+                    <div class="ui-row">
+                        <span class="team-title">TEAM B</span>
+                        <span>Score: <span id="scoreB">0</span></span>
+                        <span>Time: <span id="timerB">60</span>s</span>
+                    </div>
+                    <div class="hint-container">
+                        <img id="imgB" class="hint-image" src="" alt="Hint">
+                        <div id="blanksB" class="spelling-blanks">_ _ _</div>
+                    </div>
+                </div>
+                <img id="catB" class="cat-player" src="cat.png" alt="Cat B">
+                <div class="controls">
+                    <div class="btn-ctrl" id="upBtnB">▲</div>
+                    <div class="btn-ctrl" id="downBtnB">▼</div>
+                </div>
             </div>
-        </div>
 
-        <img id="catB" class="cat-player" src="cat.png" alt="Cat B">
-
-        <div class="controls">
-            <div class="btn" id="upBtnB">▲</div>
-            <div class="btn" id="downBtnB">▼</div>
         </div>
     </div>
 
-</div>
+    <script>
+        // Default Workspace Items
+        let dataset = [
+            { hint: "Fruit", answer: "Apple" },
+            { hint: "Animal", answer: "Zebra" }
+        ];
 
-<script>
-    // ==========================================
-    // PLACEHOLDER DATA STRUCTURE (EDIT LATER)
-    // ==========================================
-    const spellingData = [
-        { word: "CAT", image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='50' height='50'><circle cx='25' cy='25' r='20' fill='orange'/></svg>" },
-        { word: "DOG", image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='50' height='50'><circle cx='25' cy='25' r='20' fill='brown'/></svg>" }
-    ];
+        const listBody = document.getElementById('wordListBody');
 
-    // Track state dynamically for both teams
-    const state = {
-        A: { score: 0, timer: 60, wordIdx: 0, letterIdx: 0, catY: 250, activeWord: "" },
-        B: { score: 0, timer: 60, wordIdx: 0, letterIdx: 0, catY: 250, activeWord: "" }
-    };
+        // Render rows dynamically into table workspace
+        function renderTable() {
+            listBody.innerHTML = '';
+            dataset.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><input type="text" value="${item.hint}" data-index="${index}" data-field="hint"></td>
+                    <td><input type="text" value="${item.answer}" data-index="${index}" data-field="answer" style="text-transform: uppercase;"></td>
+                    <td><button class="btn-del" data-index="${index}">X</button></td>
+                `;
+                listBody.appendChild(row);
+            });
+            attachTableListeners();
+        }
 
-    const lanePositions = [150, 270, 390];
-    const catSpeed = 40;
+        function attachTableListeners() {
+            listBody.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    const idx = e.target.dataset.index;
+                    const field = e.target.dataset.field;
+                    dataset[idx][field] = e.target.value;
+                    localStorage.setItem('teachevelyn_data', JSON.stringify(dataset));
+                });
+            });
+            listBody.querySelectorAll('.btn-del').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const idx = e.target.dataset.index;
+                    dataset.splice(idx, 1);
+                    localStorage.setItem('teachevelyn_data', JSON.stringify(dataset));
+                    renderTable();
+                });
+            });
+        }
 
-    // --- Core Logic Hookups ---
-    function initTeam(teamId) {
-        const team = state[teamId];
-        if(spellingData.length === 0) return;
-        
-        const currentData = spellingData[team.wordIdx];
-        team.activeWord = currentData.word;
-        team.letterIdx = 0;
+        document.getElementById('btnAddWord').addEventListener('click', () => {
+            dataset.push({ hint: "", answer: "" });
+            renderTable();
+        });
 
-        document.getElementById(`img${teamId}`).src = currentData.image;
-        updateBlanksDisplay(teamId);
-    }
-
-    function updateBlanksDisplay(teamId) {
-        const team = state[teamId];
-        let displayStr = "";
-        for(let i = 0; i < team.activeWord.length; i++) {
-            if(i < team.letterIdx) {
-                displayStr += team.activeWord[i] + " ";
-            } else {
-                displayStr += "_ ";
+        document.getElementById('btnErase').addEventListener('click', () => {
+            if(confirm("Erase all items in the workspace table?")) {
+                dataset = [];
+                localStorage.removeItem('teachevelyn_data');
+                renderTable();
             }
+        });
+
+        // Disk Save/Load handlers
+        document.getElementById('btnSave').addEventListener('click', () => {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataset, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "evelyn_spelling_profile.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        });
+
+        document.getElementById('btnLoad').addEventListener('click', () => {
+            document.getElementById('fileImporter').click();
+        });
+
+        document.getElementById('fileImporter').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const parsed = JSON.parse(evt.target.result);
+                    if(Array.isArray(parsed)) {
+                        dataset = parsed;
+                        localStorage.setItem('teachevelyn_data', JSON.stringify(dataset));
+                        renderTable();
+                    }
+                } catch(err) { alert("Invalid JSON Profile File."); }
+            };
+            reader.readAsText(file);
+        });
+
+        // Load cached LocalStorage profile values on boots
+        const cached = localStorage.getItem('teachevelyn_data');
+        if(cached) dataset = JSON.parse(cached);
+        renderTable();
+
+
+        // =========================================================
+        // LIVE SIMULTANEOUS DUAL PLAY ENGINE RUNTIME CORE
+        // =========================================================
+        let gameRuntimeData = [];
+        let runningState = {
+            A: { score: 0, timer: 60, wordIdx: 0, letterIdx: 0, catY: 250, activeWord: "", activeHint: "", loops: [] },
+            B: { score: 0, timer: 60, wordIdx: 0, letterIdx: 0, catY: 250, activeWord: "", activeHint: "", loops: [] }
+        };
+
+        const positionsY = [160, 280, 400];
+        let runIntervals = [];
+
+        document.getElementById('btnLaunch').addEventListener('click', () => {
+            // Filter out empty rows before starting
+            gameRuntimeData = dataset.filter(item => item.answer.trim() !== "");
+            if(gameRuntimeData.length === 0) {
+                alert("Please add at least one complete word before launching!");
+                return;
+            }
+
+            // Extract initial configurations
+            const inputTime = parseInt(document.getElementById('gameTimer').value) || 60;
+            const speedSetting = document.getElementById('gameSpeed').value;
+            
+            let speedStep = 4;
+            if(speedSetting === 'fast') speedStep = 6;
+            if(speedSetting === 'turbo') speedStep = 9;
+
+            // Show runtime screen panel overlays
+            document.getElementById('hubPanel').style.display = 'none';
+            document.getElementById('gameArena').style.display = 'block';
+
+            // Reset engine runtime values
+            runningState.A = { score: 0, timer: inputTime, wordIdx: 0, letterIdx: 0, catY: 250, activeWord: "", activeHint: "", loops: [], speed: speedStep };
+            runningState.B = { score: 0, timer: inputTime, wordIdx: 0, letterIdx: 0, catY: 250, activeWord: "", activeHint: "", loops: [], speed: speedStep };
+
+            document.getElementById('scoreA').innerText = "0";
+            document.getElementById('scoreB').innerText = "0";
+            document.getElementById('timerA').innerText = inputTime;
+            document.getElementById('timerB').innerText = inputTime;
+
+            // Initialize both systems independently
+            initTeamLane('A');
+            initTeamLane('B');
+
+            // Boot global ticking loop managers
+            const clockTicker = setInterval(() => {
+                let activeTickers = false;
+                ['A', 'B'].forEach(teamId => {
+                    if(runningState[teamId].timer > 0) {
+                        runningState[teamId].timer--;
+                        document.getElementById(`timer${teamId}`).innerText = runningState[teamId].timer;
+                        activeTickers = true;
+                    }
+                });
+                if(!activeTickers) {
+                    clearInterval(clockTicker);
+                    terminateGameSession();
+                }
+            }, 1000);
+            runIntervals.push(clockTicker);
+
+            // Register continuous element spawners
+            const spawnerA = setInterval(() => spawnLetterObject('A'), 2000);
+            const spawnerB = setInterval(() => spawnLetterObject('B'), 2000);
+            runIntervals.push(spawnerA, spawnerB);
+        });
+
+        function initTeamLane(teamId) {
+            const team = runningState[teamId];
+            const activeData = gameRuntimeData[team.wordIdx];
+            
+            team.activeWord = activeData.answer.toUpperCase().replace(/[^A-Z]/g, "");
+            team.activeHint = activeData.hint;
+            team.letterIdx = 0;
+
+            const imgEl = document.getElementById(`img${teamId}`);
+            if(team.activeHint.startsWith("http://") || team.activeHint.startsWith("https://") || team.activeHint.startsWith("data:image")) {
+                imgEl.src = team.activeHint;
+                imgEl.style.display = "block";
+            } else {
+                imgEl.style.display = "none"; 
+            }
+
+            refreshBlanks(teamId);
         }
-        document.getElementById(`blanks${teamId}`).innerText = displayStr.trim();
-    }
 
-    // --- On-Screen Buttons Configuration ---
-    function moveCat(teamId, direction) {
-        const team = state[teamId];
-        if (direction === 'up' && team.catY > 130) {
-            team.catY -= catSpeed;
-        } else if (direction === 'down' && team.catY < 420) {
-            team.catY += catSpeed;
+        function refreshBlanks(teamId) {
+            const team = runningState[teamId];
+            let renderStr = "";
+            for(let i = 0; i < team.activeWord.length; i++) {
+                renderStr += (i < team.letterIdx) ? team.activeWord[i] + " " : "_ ";
+            }
+            document.getElementById(`blanks${teamId}`).innerText = renderStr.trim();
         }
-        document.getElementById(`cat${teamId}`).style.top = team.catY + 'px';
-    }
 
-    document.getElementById('upBtnA').addEventListener('click', () => moveCat('A', 'up'));
-    document.getElementById('downBtnA').addEventListener('click', () => moveCat('A', 'down'));
-    document.getElementById('upBtnB').addEventListener('click', () => moveCat('B', 'up'));
-    document.getElementById('downBtnB').addEventListener('click', () => moveCat('B', 'down'));
+        // On-screen touch layout engine assignments
+        function moveCatSprite(teamId, dir) {
+            const team = runningState[teamId];
+            if(team.timer <= 0) return;
 
-    // --- Letter Spawning & Collision Loop Framework ---
-    function spawnLetterForTeam(teamId) {
-        const board = document.getElementById(`team${teamId}`);
-        const team = state[teamId];
-        
-        const letterEl = document.createElement('div');
-        letterEl.classList.add('floating-letter');
-        
-        let isCorrect = Math.random() > 0.5;
-        let char = "";
-        if (isCorrect && team.activeWord) {
-            char = team.activeWord[team.letterIdx];
-        } else {
-            const alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            char = alpha[Math.floor(Math.random() * alpha.length)];
+            if (dir === 'up' && team.catY > 160) {
+                team.catY -= 120;
+            } else if (dir === 'down' && team.catY < 400) {
+                team.catY += 120;
+            }
+            document.getElementById(`cat${teamId}`).style.top = team.catY + 'px';
         }
-        
-        letterEl.innerText = char;
-        let yPos = lanePositions[Math.floor(Math.random() * lanePositions.length)];
-        letterEl.style.top = yPos + 'px';
-        letterEl.style.right = "-50px";
-        board.appendChild(letterEl);
 
-        let currentPos = 0; 
-        const boardWidth = board.offsetWidth;
+        document.getElementById('upBtnA').addEventListener('click', () => moveCatSprite('A', 'up'));
+        document.getElementById('downBtnA').addEventListener('click', () => moveCatSprite('A', 'down'));
+        document.getElementById('upBtnB').addEventListener('click', () => moveCatSprite('B', 'up'));
+        document.getElementById('downBtnB').addEventListener('click', () => moveCatSprite('B', 'down'));
 
-        let animationLoop = setInterval(() => {
-            currentPos += 4;
-            letterEl.style.right = currentPos + 'px';
+        // Element trajectory animation engines
+        function spawnLetterObject(teamId) {
+            const team = runningState[teamId];
+            if(team.timer <= 0) return;
 
-            let letterLeft = boardWidth - currentPos - 45;
+            const boardContainer = document.getElementById(`team${teamId}`);
+            const letterBubble = document.createElement('div');
+            letterBubble.classList.add('floating-letter');
 
-            if (letterLeft < 200 && letterLeft > 40) {
-                if (Math.abs(yPos - team.catY) < 60) {
-                    clearInterval(animationLoop);
-                    letterEl.remove();
-                    evaluateCaughtLetter(teamId, char);
+            // 60% probability of spawning target path letter element
+            const rollCorrect = Math.random() < 0.6;
+            let character = "";
+            if(rollCorrect && team.letterIdx < team.activeWord.length) {
+                character = team.activeWord[team.letterIdx];
+            } else {
+                const pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                character = pool[Math.floor(Math.random() * pool.length)];
+            }
+
+            letterBubble.innerText = character;
+            let assignedY = positionsY[Math.floor(Math.random() * positionsY.length)];
+            letterBubble.style.top = assignedY + 'px';
+            letterBubble.style.right = "-60px";
+            boardContainer.appendChild(letterBubble);
+
+            let horizontalDrive = 0;
+            const limitWidth = boardContainer.offsetWidth;
+
+            let animTick = setInterval(() => {
+                if(team.timer <= 0) {
+                    clearInterval(animTick);
+                    letterBubble.remove();
+                    return;
+                }
+
+                horizontalDrive += team.speed;
+                letterBubble.style.right = horizontalDrive + 'px';
+
+                let currentLeftX = limitWidth - horizontalDrive - 55;
+
+                // Hitbox configuration framework matching Cat player model size dimensions
+                if (currentLeftX < 240 && currentLeftX > 40) {
+                    if (Math.abs(assignedY - team.catY) < 40) {
+                        clearInterval(animTick);
+                        letterBubble.remove();
+                        processCaughtItem(teamId, character);
+                    }
+                }
+
+                if (horizontalDrive > limitWidth + 60) {
+                    clearInterval(animTick);
+                    letterBubble.remove();
+                }
+            }, 20);
+
+            team.loops.push(animTick);
+        }
+
+        function processCaughtItem(teamId, letter) {
+            const team = runningState[teamId];
+            let goalLetter = team.activeWord[team.letterIdx];
+
+            if(letter === goalLetter) {
+                team.letterIdx++;
+                refreshBlanks(teamId);
+
+                // Word finished trigger condition
+                if(team.letterIdx === team.activeWord.length) {
+                    team.score += 10;
+                    document.getElementById(`score${teamId}`).innerText = team.score;
+                    
+                    // Increment track loops immediately to display the next target word
+                    team.wordIdx = (team.wordIdx + 1) % gameRuntimeData.length;
+                    initTeamLane(teamId);
                 }
             }
-
-            if (currentPos > boardWidth + 50) {
-                clearInterval(animationLoop);
-                letterEl.remove();
-            }
-        }, 20);
-    }
-
-    function evaluateCaughtLetter(teamId, letter) {
-        const team = state[teamId];
-        let targetLetter = team.activeWord[team.letterIdx];
-
-        if (letter === targetLetter) {
-            team.letterIdx++;
-            updateBlanksDisplay(teamId);
-
-            if (team.letterIdx === team.activeWord.length) {
-                team.score += 10;
-                document.getElementById(`score${teamId}`).innerText = team.score;
-                
-                team.wordIdx = (team.wordIdx + 1) % spellingData.length;
-                initTeam(teamId);
-            }
         }
-    }
 
-    // --- Countdown Clocks Setup ---
-    function startClocks() {
-        setInterval(() => {
-            if (state.A.timer > 0) {
-                state.A.timer--;
-                document.getElementById('timerA').innerText = state.A.timer;
+        function terminateGameSession() {
+            runIntervals.forEach(clearInterval);
+            runIntervals = [];
+
+            const screenOverlay = document.createElement('div');
+            screenOverlay.classList.add('game-over-screen');
+            
+            let resultMessage = "";
+            if(runningState.A.score > runningState.B.score) {
+                resultMessage = "🎉 TEAM A WINS! 🎉";
+            } else if (runningState.B.score > runningState.A.score) {
+                resultMessage = "🎉 TEAM B WINS! 🎉";
+            } else {
+                resultMessage = "🤝 IT'S A TIE! 🤝";
             }
-            if (state.B.timer > 0) {
-                state.B.timer--;
-                document.getElementById('timerB').innerText = state.B.timer;
-            }
-        }, 1000);
-    }
 
-    // --- Start Global Loops ---
-    initTeam('A');
-    initTeam('B');
-    startClocks();
-    
-    setInterval(() => spawnLetterForTeam('A'), 2000);
-    setInterval(() => spawnLetterForTeam('B'), 2000);
-</script>
+            screenOverlay.innerHTML = `
+                <h2>GAME OVER</h2>
+                <p style="color: #f1c40f; font-weight: bold;">${resultMessage}</p>
+                <p>Team A Score: ${runningState.A.score} | Team B Score: ${runningState.B.score}</p>
+                <button class="btn-restart" id="btnExitArena">Back To Workspace Control Panel</button>
+            `;
+            document.getElementById('gameArena').appendChild(screenOverlay);
 
+            document.getElementById('btnExitArena').addEventListener('click', () => {
+                screenOverlay.remove();
+                document.getElementById('gameArena').style.display = 'none';
+                document.getElementById('hubPanel').style.display = 'block';
+            });
+        }
+    </script>
 </body>
 </html>
