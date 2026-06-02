@@ -3,210 +3,325 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sight Words Spelling Quest</title>
+    <title>Spelling Game Learning Hub</title>
     <style>
-        * {
-            box-sizing: border-box;
-            font-family: 'Arial', sans-serif;
-        }
-
+        * { box-sizing: border-box; font-family: 'Arial', sans-serif; }
         body {
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background: linear-gradient(135deg, #6c5ce7 0%, #a1c4fd 100%);
-            background-size: cover;
-            background-position: center;
-            color: white;
+            margin: 0; padding: 20px;
+            background: linear-gradient(135deg, #2980b9 0%, #2c3e50 100%);
+            color: #333; display: flex; justify-content: center; align-items: flex-start;
+            min-height: 100vh;
         }
-
-        .game-container {
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(8px);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-            text-align: center;
-            width: 90%;
-            max-width: 500px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
+        .hub-container {
+            background: #f5f6fa; width: 100%; max-width: 900px;
+            border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 4px solid #fff; overflow: hidden;
         }
-
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+        .hub-header {
+            background: #2c3e50; color: white; text-align: center;
+            padding: 15px; border-bottom: 4px solid #e74c3c;
         }
-
-        button {
-            background-color: #00bec4;
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: transform 0.2s, background-color 0.2s;
-            box-shadow: 0 4px 15px rgba(0, 190, 196, 0.4);
+        .hub-header h1 { margin: 0; font-size: 2rem; color: #f1c40f; }
+        .hub-header p { margin: 5px 0 0 0; font-size: 1rem; opacity: 0.9; }
+        
+        .settings-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px;
+            background: #ffffff; border-bottom: 2px solid #dcdde1;
         }
-
-        button:hover {
-            background-color: #00d2d8;
-            transform: scale(1.05);
+        .setting-box {
+            background: #f8f9fa; padding: 10px 15px; border-radius: 8px;
+            border: 1px solid #dcdde1; display: flex; align-items: center; justify-content: space-between;
         }
-
-        .hidden {
-            display: none !important;
+        .setting-box label { font-weight: bold; font-size: 0.9rem; color: #2c3e50; }
+        .setting-box input[type="number"], .setting-box select {
+            width: 100px; padding: 5px; border-radius: 5px; border: 1px solid #ccd1d9; text-align: center;
         }
+        .setting-box input[type="checkbox"] { transform: scale(1.3); }
 
-        input[type="text"] {
-            width: 80%;
-            padding: 12px 20px;
-            font-size: 1.2rem;
-            border: none;
-            border-radius: 25px;
-            margin-bottom: 20px;
-            text-align: center;
-            outline: none;
-            color: #333;
+        .file-actions { padding: 10px 20px; display: flex; gap: 10px; background: #f1f2f6; }
+        .btn-file {
+            border: none; padding: 8px 15px; color: white; font-weight: bold;
+            border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 5px;
         }
+        .btn-save { background: #3498db; }
+        .btn-load { background: #9b59b6; }
 
-        .hint-box {
-            font-size: 1.5rem;
-            font-weight: bold;
-            letter-spacing: 5px;
-            background: rgba(255,255,255,0.2);
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+        .words-table-container { padding: 20px; background: #fff; }
+        .words-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .words-table th { background: #f1f2f6; color: #2c3e50; padding: 10px; text-align: left; border-bottom: 2px solid #ccd1d9; }
+        .words-table td { padding: 8px; border-bottom: 1px solid #eee; }
+        .words-table input[type="text"] { width: 100%; padding: 8px; border: 1px solid #ccd1d9; border-radius: 5px; }
+        
+        .btn-delete {
+            background: #e74c3c; color: white; border: none; width: 30px; height: 30px;
+            border-radius: 50%; font-weight: bold; cursor: pointer;
         }
-
-        .score-board {
-            font-size: 1rem;
-            margin-bottom: 15px;
-            opacity: 0.9;
+        .btn-add-word {
+            background: #cbd5e1; color: #334155; border: none; padding: 10px 20px;
+            font-weight: bold; border-radius: 5px; cursor: pointer; margin-bottom: 20px;
         }
+        .btn-add-word:hover { background: #94a3b8; }
 
-        .feedback {
-            font-weight: bold;
-            margin-top: 15px;
-            height: 20px;
-            font-size: 1.2rem;
+        .footer-action { padding: 20px; text-align: center; background: #f1f2f6; border-top: 2px solid #dcdde1; }
+        .btn-start-game {
+            background: #2ecc71; color: white; border: none; padding: 15px 60px;
+            font-size: 1.5rem; font-weight: bold; border-radius: 35px; cursor: pointer;
+            box-shadow: 0 5px 15px rgba(46,204,113,0.4); width: 100%;
+        }
+        .btn-start-game:hover { background: #27ae60; }
+
+        /* THE LIVE PLAYING GAME SCREEN WINDOW */
+        #game-play-screen {
+            position: fixed; top:0; left:0; right:0; bottom:0; background: #2c3e50;
+            z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white;
+        }
+        .game-card {
+            background: rgba(255,255,255,0.1); padding: 40px; border-radius: 20px;
+            text-align: center; width: 90%; max-width: 500px; border: 2px solid rgba(255,255,255,0.2);
+        }
+        .game-letter-input {
+            width: 70%; padding: 12px; font-size: 1.5rem; text-align: center;
+            border-radius: 10px; border: none; margin: 20px 0; outline: none; color: #333;
+        }
+        .game-btn {
+            background: #e67e22; color: white; border: none; padding: 10px 30px;
+            font-size: 1.2rem; font-weight: bold; border-radius: 50px; cursor: pointer;
+        }
+        .btn-exit-game {
+            position: absolute; top: 20px; right: 20px; background: #e74c3c; color: white;
+            border: none; padding: 10px 20px; font-weight: bold; border-radius: 5px; cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <div class="game-container">
-        <div id="start-menu">
-            <h1>Sight Words Quest ✨</h1>
-            <p>Fill in the missing words to complete the sentences!</p>
-            <br>
-            <button onclick="startGame()">START GAME</button>
+    <div id="creator-hub" class="hub-container">
+        <div class="hub-header">
+            <h1>Spelling Game Creator</h1>
+            <p>Evelyn's Classroom Learning Hub</p>
         </div>
 
-        <div id="game-screen" class="hidden">
-            <div class="score-board">Score: <span id="score">0</span> / 3</div>
-            <h2>Complete the sentence:</h2>
-            
-            <p id="definition" style="font-size: 1.4rem; font-weight: bold; margin-bottom: 20px; color: #fff;"></p>
-            
-            <div id="word-hint" class="hint-box">_ _ _ _</div>
-
-            <input type="text" id="user-input" placeholder="Type the missing word" autocomplete="off">
-            <br>
-            <button onclick="checkAnswer()">SUBMIT</button>
-            <div id="feedback" class="feedback"></div>
+        <div class="settings-grid">
+            <div class="setting-box">
+                <label>Timer (Seconds):</label>
+                <input type="number" id="setup-timer" value="60">
+            </div>
+            <div class="setting-box">
+                <label>Speed:</label>
+                <select id="setup-speed">
+                    <option>Normal</option>
+                    <option>Fast</option>
+                    <option>Slow</option>
+                </select>
+            </div>
+            <div class="setting-box">
+                <label>Sync Qs:</label>
+                <input type="checkbox" id="setup-sync" checked>
+            </div>
+            <div class="setting-box">
+                <label>HP Hearts:</label>
+                <input type="number" id="setup-hp" value="5">
+            </div>
+            <div class="setting-box">
+                <label>Music:</label>
+                <input type="checkbox" id="setup-music" checked>
+            </div>
+            <div class="setting-box">
+                <label>Vol:</label>
+                <input type="range" min="0" max="100" value="80" style="width:100px;">
+            </div>
+            <div class="setting-box">
+                <label>SFX:</label>
+                <input type="checkbox" id="setup-sfx" checked>
+            </div>
+            <div class="setting-box" style="background:#ffebee;">
+                <label style="color:#c62828;">Clear App:</label>
+                <button onclick="clearAllRows()" style="background:#e74c3c; color:white; border:none; padding:5px 10px; font-weight:bold; cursor:pointer; border-radius:4px;">ERASE DATA</button>
+            </div>
         </div>
 
-        <div id="end-screen" class="hidden">
-            <h1>Fantastic Job! 🎉</h1>
-            <p>You mastered your sight words today!</p>
-            <h2>Final Score: <span id="final-score">0</span>/3</h2>
-            <button onclick="restartGame()">PLAY AGAIN</button>
+        <div class="file-actions">
+            <button class="btn-file btn-save" onclick="saveConfiguration()">💾 SAVE FILE</button>
+            <button class="btn-file btn-load" onclick="triggerLoadFile()">📂 LOAD FILE</button>
+            <input type="file" id="hidden-file-picker" style="display:none;" onchange="loadConfiguration(event)">
+        </div>
+
+        <div class="words-table-container">
+            <table class="words-table">
+                <thead>
+                    <tr>
+                        <th style="width: 45%;">Hint / Image</th>
+                        <th style="width: 45%;">Answer</th>
+                        <th style="width: 10%; text-align: center;">Del</th>
+                    </tr>
+                </thead>
+                <tbody id="words-table-body">
+                    <tr>
+                        <td><input type="text" class="row-hint" value="Fruit"></td>
+                        <td><input type="text" class="row-answer" value="Apple"></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <button class="btn-add-word" onclick="addNewBlankRow()">+ ADD WORD</button>
+        </div>
+
+        <div class="footer-action">
+            <button class="btn-start-game" onclick="launchGameEngine()">SAVE & START</button>
+        </div>
+    </div>
+
+    <div id="game-play-screen" class="hidden">
+        <button class="btn-exit-game" onclick="closeGameEngine()">❌ EXIT HUB</button>
+        <div class="game-card">
+            <div style="font-size: 1.2rem; margin-bottom: 10px; opacity: 0.8;">Score: <span id="game-score-count">0</span></div>
+            <h2 id="game-current-hint" style="font-size: 2rem; margin: 10px 0;">Fruit</h2>
+            
+            <div id="game-underscore-slots" style="font-size: 2.5rem; letter-spacing: 8px; margin: 20px 0; font-weight: bold; color: #f1c40f;">_ _ _ _ _</div>
+            
+            <input type="text" id="game-player-input" class="game-letter-input" placeholder="Type answer here" autocomplete="off">
+            <br>
+            <button class="game-btn" onclick="verifyPlayerAnswer()">SUBMIT ANSWER</button>
+            <div id="game-feedback" style="margin-top: 15px; font-weight: bold; height: 20px; font-size: 1.2rem;"></div>
         </div>
     </div>
 
     <script>
-        // YOUR SIGHT WORDS AND SENTENCES
-        const wordList = [
-            { word: "have", hint: "I _______ a cute little puppy at home." },
-            { word: "can", hint: "Birds _______ fly high up in the blue sky." },
-            { word: "like", hint: "I really _______ eating sweet strawberries!" }
-        ];
+        const tableBody = document.getElementById('words-table-body');
 
-        let currentWordIndex = 0;
-        let score = 0;
-
-        const startMenu = document.getElementById('start-menu');
-        const gameScreen = document.getElementById('game-screen');
-        const endScreen = document.getElementById('end-screen');
-        const wordHint = document.getElementById('word-hint');
-        const definition = document.getElementById('definition');
-        const userInput = document.getElementById('user-input');
-        const scoreDisplay = document.getElementById('score');
-        const finalScoreDisplay = document.getElementById('final-score');
-        const feedback = document.getElementById('feedback');
-
-        function startGame() {
-            startMenu.classList.add('hidden');
-            gameScreen.classList.remove('hidden');
-            loadWord();
+        function addNewBlankRow(hintVal = "", answerVal = "") {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" class="row-hint" value="${hintVal}"></td>
+                <td><input type="text" class="row-answer" value="${answerVal}"></td>
+                <td style="text-align:center;"><button class="btn-delete" onclick="deleteRow(this)">X</button></td>
+            `;
+            tableBody.appendChild(tr);
         }
 
-        function loadWord() {
-            userInput.value = "";
-            feedback.textContent = "";
+        function deleteRow(buttonElement) {
+            const row = buttonElement.closest('tr');
+            row.remove();
+        }
+
+        function clearAllRows() {
+            if(confirm("Are you sure you want to clear your words list?")) {
+                tableBody.innerHTML = "";
+            }
+        }
+
+        function saveConfiguration() {
+            const hints = document.querySelectorAll('.row-hint');
+            const answers = document.querySelectorAll('.row-answer');
+            let profileData = [];
+
+            hints.forEach((hintInput, idx) => {
+                profileData.push({
+                    hint: hintInput.value,
+                    answer: answers[idx].value
+                });
+            });
+
+            const blob = new Blob([JSON.stringify(profileData, null, 2)], { type: "application/json" });
+            const tempAnchor = document.createElement('a');
+            tempAnchor.href = URL.createObjectURL(blob);
+            tempAnchor.download = "learning-hub-spelling-data.json";
+            tempAnchor.click();
+        }
+
+        function triggerLoadFile() {
+            document.getElementById('hidden-file-picker').click();
+        }
+
+        function loadConfiguration(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    tableBody.innerHTML = ""; 
+                    importedData.forEach(item => {
+                        addNewBlankRow(item.hint, item.answer);
+                    });
+                } catch (err) {
+                    alert("Error reading file configuration format.");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        let operationalList = [];
+        let runningIndex = 0;
+        let runningScore = 0;
+
+        function launchGameEngine() {
+            const hints = document.querySelectorAll('.row-hint');
+            const answers = document.querySelectorAll('.row-answer');
+            operationalList = [];
+
+            hints.forEach((hintInput, idx) => {
+                if(answers[idx].value.trim() !== "") {
+                    operationalList.push({
+                        hint: hintInput.value,
+                        answer: answers[idx].value.trim()
+                    });
+                }
+            });
+
+            if(operationalList.length === 0) {
+                alert("Please input at least one word item before starting!");
+                return;
+            }
+
+            runningIndex = 0;
+            runningScore = 0;
+            document.getElementById('game-score-count').textContent = "0";
+            document.getElementById('game-play-screen').classList.remove('hidden');
+            loadGameWord();
+        }
+
+        function loadGameWord() {
+            document.getElementById('game-player-input').value = "";
+            document.getElementById('game-feedback').textContent = "";
             
-            if (currentWordIndex < wordList.length) {
-                let currentWordObj = wordList[currentWordIndex];
-                definition.textContent = currentWordObj.hint;
-                wordHint.textContent = currentWordObj.word.replace(/[a-z]/g, "_ ");
+            if(runningIndex < operationalList.length) {
+                const currentItem = operationalList[runningIndex];
+                document.getElementById('game-current-hint').textContent = currentItem.hint;
+                document.getElementById('game-underscore-slots').textContent = currentItem.answer.replace(/[a-zA-Z]/g, "_ ");
             } else {
-                endGame();
+                alert("Wonderful job! You completed all the items in your Learning Hub! 🎉");
+                closeGameEngine();
             }
         }
 
-        function checkAnswer() {
-            let playerAnswer = userInput.value.trim().toLowerCase();
-            let correctAnswer = wordList[currentWordIndex].word.toLowerCase();
+        function verifyPlayerAnswer() {
+            const inputElement = document.getElementById('game-player-input');
+            const feedbackElement = document.getElementById('game-feedback');
+            
+            let playerAttempt = inputElement.value.trim().toLowerCase();
+            let actualAnswer = operationalList[runningIndex].answer.toLowerCase();
 
-            if (playerAnswer === correctAnswer) {
-                score++;
-                scoreDisplay.textContent = score;
-                feedback.style.color = "#2ecc71";
-                feedback.textContent = "Awesome! Correct! 🌟";
-                
-                currentWordIndex++;
-                setTimeout(loadWord, 1500);
+            if(playerAttempt === actualAnswer) {
+                runningScore++;
+                document.getElementById('game-score-count').textContent = runningScore;
+                feedbackElement.style.color = "#2ecc71";
+                feedbackElement.textContent = "Correct! ✨";
+                runningIndex++;
+                setTimeout(loadGameWord, 1200);
             } else {
-                feedback.style.color = "#ff7675";
-                feedback.textContent = "Not quite, try again! ❌";
+                feedbackElement.style.color = "#ff4757";
+                feedbackElement.textContent = "Try again! ❌";
             }
         }
 
-        userInput.addEventListener("keyup", function(event) {
-            if (event.key === "Enter") {
-                checkAnswer();
-            }
+        document.getElementById('game-player-input').addEventListener('keyup', function(e) {
+            if(e.key === "Enter") verifyPlayerAnswer();
         });
 
-        function endGame() {
-            gameScreen.classList.add('hidden');
-            endScreen.classList.remove('hidden');
-            finalScoreDisplay.textContent = score;
-        }
-
-        function restartGame() {
-            currentWordIndex = 0;
-            score = 0;
-            scoreDisplay.textContent = score;
-            endScreen.classList.add('hidden');
-            startMenu.classList.remove('hidden');
+        function closeGameEngine() {
+            document.getElementById('game-play-screen').classList.add('hidden');
         }
     </script>
 </body>
