@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Teacher Evelyn Learning Hub - Dual Cat Game Pro</title>
+    <title>Teacher Evelyn Learning Hub - Cat Game Pro</title>
     <style>
         * { box-sizing: border-box; font-family: 'Arial', sans-serif; }
         body {
@@ -140,8 +140,8 @@
             background-image: url('background.png'); background-size: cover; background-position: center;
             overflow: hidden; box-sizing: border-box;
         }
-        #teamA { border-right: 4px solid #fff; }
-        #teamB { border-left: 4px solid #fff; }
+        #teamA { border-right: 2px solid #fff; }
+        #teamB { border-left: 2px solid #fff; }
 
         .ui-panel {
             position: absolute; top: 0; left: 0; width: 100%;
@@ -152,7 +152,6 @@
         .ui-row { display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; font-weight: bold; color: white; }
         .team-title { font-size: 1.6rem; font-weight: bold; color: #f1c40f; letter-spacing: 1px; }
         
-        /* STAR SYSTEM STYLING */
         .stars-container { font-size: 1.4rem; color: #f1c40f; letter-spacing: 3px; }
 
         .hint-container {
@@ -170,7 +169,6 @@
             border-radius: 50%; border: 3px solid #d35400; box-shadow: 2px 4px 8px rgba(0,0,0,0.4); z-index: 5;
         }
 
-        /* PARTICLE SPARK EFFECTS */
         .spark {
             position: absolute; width: 8px; height: 8px; background: #f1c40f; 
             border-radius: 50%; pointer-events: none; z-index: 99;
@@ -184,7 +182,7 @@
         }
         .btn-ctrl:active { background: #f1c40f; transform: scale(0.92); }
 
-        /* DEDICATED WINNER TROPHY SCREEN OVERLAY */
+        /* WINNER OVERLAY STYLING */
         .game-over-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(16, 24, 32, 0.95); display: flex; flex-direction: column;
@@ -194,7 +192,7 @@
         .trophy-icon { font-size: 5.5rem; margin-bottom: 10px; animation: bounce 1.5s infinite alternate; }
         .game-over-screen h2 { font-size: 3.5rem; color: #f1c40f; margin: 0 0 10px 0; text-shadow: 0px 4px 10px rgba(241,196,15,0.4); }
         .winner-banner { font-size: 2.2rem; background: #27ae60; padding: 10px 40px; border-radius: 30px; margin-bottom: 25px; font-weight: bold; box-shadow: 0 4px 15px rgba(39,174,96,0.4); }
-        .score-row { font-size: 1.5rem; margin-bottom: 30px; color: #bdc3c7; }
+        .score-row { font-size: 1.5rem; margin-bottom: 30px; color: #bdc3c7; line-height: 1.6; }
         .btn-restart {
             background: #e74c3c; color: white; border: none; padding: 15px 45px;
             font-size: 1.3rem; font-weight: bold; border-radius: 30px; cursor: pointer;
@@ -213,18 +211,25 @@
     <div class="hub-container" id="hubPanel">
         <div class="hub-header">
             <h1>Spelling Game Center</h1>
-            <h2>Teacher Evelyn Learning Hub (Dual Arrow Mode)</h2>
+            <h2>Teacher Evelyn Learning Hub (Game Setup Control)</h2>
         </div>
 
         <div class="settings-grid">
             <div class="setting-item">
-                <label>Timer Per Team (Seconds):</label>
+                <label>Game Mode Setup:</label>
+                <select id="gameMode">
+                    <option value="single">Single Player (Team A Only)</option>
+                    <option value="dual" selected>Dual Players (Split Screen)</option>
+                </select>
+            </div>
+            <div class="setting-item">
+                <label>Timer Length (Seconds):</label>
                 <input type="number" id="gameTimer" value="60">
             </div>
             <div class="setting-item">
-                <label>Letter Speed:</label>
+                <label>Letter Velocity Speed:</label>
                 <select id="gameSpeed">
-                    <option value="normal">Normal</option>
+                    <option value="normal">Normal Walk</option>
                     <option value="fast">Fast Run</option>
                     <option value="turbo">Turbo Chaos</option>
                 </select>
@@ -242,7 +247,7 @@
         </div>
 
         <div class="info-bar">
-            🎮 ARROW GAME ENGINE: Team A and Team B play simultaneously! Avoid wrong letters or lose your 5 Stars!
+            🎮 SETUP CONTROL: Toggle between Single Player or Dual Mode depending on your classroom needs!
         </div>
 
         <div class="word-table-container">
@@ -261,17 +266,17 @@
         </div>
 
         <div class="launch-box">
-            <button class="btn-launch" id="btnLaunch">SAVE & LAUNCH SELECTION</button>
+            <button class="btn-launch" id="btnLaunch">SAVE & LAUNCH ARENA</button>
         </div>
     </div>
 
     <div id="gameArena">
-        <div class="split-screen">
+        <div class="split-screen" id="arenaSplitFrame">
             
             <div id="teamA" class="board">
                 <div class="ui-panel">
                     <div class="ui-row">
-                        <span class="team-title">TEAM A</span>
+                        <span class="team-title" id="titleLabelA">TEAM A</span>
                         <div id="starsA" class="stars-container">⭐⭐⭐⭐⭐</div>
                     </div>
                     <div class="ui-row">
@@ -316,7 +321,6 @@
     </div>
 
     <script>
-        // WEB AUDIO SYNTHESIZER GENERATOR
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound(type) {
             try {
@@ -327,7 +331,7 @@
                 
                 if (type === 'hit') {
                     osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
                     osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15);
                     gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
                     gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
@@ -341,9 +345,9 @@
                     osc.start(); osc.stop(audioCtx.currentTime + 0.25);
                 } else if (type === 'victory') {
                     osc.type = 'sine';
-                    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
-                    osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.2); // A5
+                    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
+                    osc.frequency.setValueAtTime(880, audioCtx.currentTime + 0.2);
                     gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
                     gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
                     osc.start(); osc.stop(audioCtx.currentTime + 0.5);
@@ -351,7 +355,6 @@
             } catch(e){}
         }
 
-        // SPARK EXPLOSION GENERATOR
         function triggerBlastEffect(container, targetY) {
             const startX = 200; 
             for(let i=0; i<12; i++) {
@@ -471,6 +474,7 @@
         if(cached) dataset = JSON.parse(cached);
         renderTable();
 
+        let activeGameMode = "dual"; 
         let gameRuntimeData = [];
         let runningState = {
             A: { score: 0, timer: 60, lives: 5, wordIdx: 0, letterIdx: 0, catY: 250, activeWord: "", activeHint: "", loops: [] },
@@ -489,12 +493,24 @@
 
             if (audioCtx.state === 'suspended') { audioCtx.resume(); }
 
+            activeGameMode = document.getElementById('gameMode').value;
             const inputTime = parseInt(document.getElementById('gameTimer').value) || 60;
             const speedSetting = document.getElementById('gameSpeed').value;
             
             let speedStep = 4;
             if(speedSetting === 'fast') speedStep = 6;
             if(speedSetting === 'turbo') speedStep = 9;
+
+            // Adjust Layout Depending on Single vs Dual Selection
+            if(activeGameMode === 'single') {
+                document.getElementById('teamB').style.display = 'none';
+                document.getElementById('teamA').style.borderRight = 'none';
+                document.getElementById('titleLabelA').innerText = "PLAYER 1";
+            } else {
+                document.getElementById('teamB').style.display = 'block';
+                document.getElementById('teamA').style.borderRight = '2px solid #fff';
+                document.getElementById('titleLabelA').innerText = "TEAM A";
+            }
 
             document.getElementById('hubPanel').style.display = 'none';
             document.getElementById('gameArena').style.display = 'block';
@@ -510,17 +526,27 @@
             document.getElementById('starsB').innerText = "⭐⭐⭐⭐⭐";
 
             initTeamLane('A');
-            initTeamLane('B');
+            if(activeGameMode === 'dual') { initTeamLane('B'); }
 
             const clockTicker = setInterval(() => {
                 let activeTickers = false;
-                ['A', 'B'].forEach(teamId => {
-                    if(runningState[teamId].timer > 0 && runningState[teamId].lives > 0) {
-                        runningState[teamId].timer--;
-                        document.getElementById(`timer${teamId}`).innerText = runningState[teamId].timer;
+                
+                // Track Team A
+                if(runningState.A.timer > 0 && runningState.A.lives > 0) {
+                    runningState.A.timer--;
+                    document.getElementById('timerA').innerText = runningState.A.timer;
+                    activeTickers = true;
+                }
+                
+                // Track Team B (Only if in dual mode)
+                if(activeGameMode === 'dual') {
+                    if(runningState.B.timer > 0 && runningState.B.lives > 0) {
+                        runningState.B.timer--;
+                        document.getElementById('timerB').innerText = runningState.B.timer;
                         activeTickers = true;
                     }
-                });
+                }
+
                 if(!activeTickers) {
                     clearInterval(clockTicker);
                     terminateGameSession();
@@ -529,8 +555,12 @@
             runIntervals.push(clockTicker);
 
             const spawnerA = setInterval(() => spawnLetterObject('A'), 2000);
-            const spawnerB = setInterval(() => spawnLetterObject('B'), 2000);
-            runIntervals.push(spawnerA, spawnerB);
+            runIntervals.push(spawnerA);
+            
+            if(activeGameMode === 'dual') {
+                const spawnerB = setInterval(() => spawnLetterObject('B'), 2000);
+                runIntervals.push(spawnerB);
+            }
         });
 
         function initTeamLane(teamId) {
@@ -636,7 +666,6 @@
         function processCaughtItem(teamId, letter) {
             const team = runningState[teamId];
             let goalLetter = team.activeWord[team.letterIdx];
-
             const laneContainer = document.getElementById(`team${teamId}`);
 
             if(letter === goalLetter) {
@@ -653,7 +682,6 @@
                     initTeamLane(teamId);
                 }
             } else {
-                // LOST A STAR LIFE
                 playSound('miss');
                 team.lives--;
                 
@@ -664,9 +692,12 @@
                 document.getElementById(`stars${teamId}`).innerText = remainingStars;
 
                 if(team.lives <= 0) {
-                    // Turn track dim if out of lives
                     laneContainer.style.opacity = "0.4";
-                    checkInstantGameOver();
+                    if(activeGameMode === 'single') {
+                        terminateGameSession();
+                    } else {
+                        checkInstantGameOver();
+                    }
                 }
             }
         }
@@ -688,24 +719,31 @@
             
             let resultMessage = "";
             let medalColor = "#f1c40f";
+            let scoreDetails = "";
 
-            if(runningState.A.score > runningState.B.score) {
-                resultMessage = "✨ TEAM A CHAMPIONS! ✨";
-            } else if (runningState.B.score > runningState.A.score) {
-                resultMessage = "✨ TEAM B CHAMPIONS! ✨";
+            if(activeGameMode === 'single') {
+                resultMessage = "✨ LEVEL COMPLETED! ✨";
+                scoreDetails = `<strong>Final Score:</strong> ${runningState.A.score} points`;
             } else {
-                resultMessage = "🤝 AN EQUAL MATCH! TIE GAME 🤝";
-                medalColor = "#3498db";
+                if(runningState.A.score > runningState.B.score) {
+                    resultMessage = "✨ TEAM A CHAMPIONS! ✨";
+                } else if (runningState.B.score > runningState.A.score) {
+                    resultMessage = "✨ TEAM B CHAMPIONS! ✨";
+                } else {
+                    resultMessage = "🤝 AN EQUAL MATCH! TIE GAME 🤝";
+                    medalColor = "#3498db";
+                }
+                scoreDetails = `
+                    <strong>TEAM A Final Score:</strong> ${runningState.A.score} points <br><br>
+                    <strong>TEAM B Final Score:</strong> ${runningState.B.score} points
+                `;
             }
 
             screenOverlay.innerHTML = `
                 <div class="trophy-icon">🏆</div>
                 <h2>ARENA RESULTS</h2>
                 <div class="winner-banner" style="background: ${medalColor}">${resultMessage}</div>
-                <div class="score-row">
-                    <strong>TEAM A Final Score:</strong> ${runningState.A.score} points <br><br>
-                    <strong>TEAM B Final Score:</strong> ${runningState.B.score} points
-                </div>
+                <div class="score-row">${scoreDetails}</div>
                 <button class="btn-restart" id="btnExitArena">Return To Dashboard</button>
             `;
             document.getElementById('gameArena').appendChild(screenOverlay);
