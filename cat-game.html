@@ -501,7 +501,6 @@
             if(speedSetting === 'fast') speedStep = 6;
             if(speedSetting === 'turbo') speedStep = 9;
 
-            // Adjust Layout Depending on Single vs Dual Selection
             if(activeGameMode === 'single') {
                 document.getElementById('teamB').style.display = 'none';
                 document.getElementById('teamA').style.borderRight = 'none';
@@ -531,14 +530,12 @@
             const clockTicker = setInterval(() => {
                 let activeTickers = false;
                 
-                // Track Team A
                 if(runningState.A.timer > 0 && runningState.A.lives > 0) {
                     runningState.A.timer--;
                     document.getElementById('timerA').innerText = runningState.A.timer;
                     activeTickers = true;
                 }
                 
-                // Track Team B (Only if in dual mode)
                 if(activeGameMode === 'dual') {
                     if(runningState.B.timer > 0 && runningState.B.lives > 0) {
                         runningState.B.timer--;
