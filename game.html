@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spelling Engine - Interactive Arena</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        body { background-color: #1a252f; overflow-x: hidden; font-family: system-ui, sans-serif; }
+        .target-slot { min-height: 60px; min-width: 50px; border: 3px dashed #7f8c8d; transition: all 0.2s ease; }
+        .letter-block { cursor: grab; transform: scale(1); transition: transform 0.15s, background-color 0.2s; }
+        .letter-block:active { cursor: grabbing; transform: scale(1.05); }
+        .kbd-focus { outline: 4px solid #f1c40f; box-shadow: 0 0 15px #f1c40f; }
+        .frozen { opacity: 0.4; pointer-events: none; filter: grayscale(1); position: relative; }
+        .frozen::after { content: "❌ LOCKED!"; position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; color: #ff4757; font-weight: 900; font-size: 1.5rem; border-radius: 0.75rem; }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+        .animate-shake { animation: shake 0.4s ease-in-out; }
+    </style>
+</head>
+<body class="text-white min-h-screen flex flex-col p-4 select-none">
+
+    <div class="w-full max-w-6xl mx-auto bg-[#2c3e50] rounded-2xl p-4 mb-4 border border-white/10 shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+        <button onclick="window.location.href='index.html'" class="bg-gray-600 hover:bg-gray-700 text-xs font-bold px-3 py-1.5 rounded uppercase transition-all">⚙️ Setup Menu</button>
+        <div class="flex-1 w-full max-w-md bg-black/40 h-6 rounded-full overflow-hidden relative border border-white/5">
+            <div id="globalProgressBar" class="h-full bg-gradient-to-r from-emerald-400 to-green-500 w-full transition-all duration-1000"></div>
+            <div id="globalTimerText" class="absolute inset-0 flex items-center justify-center text-xs font-black drop-shadow">TIMER: 60s</div>
+        </div>
+        <div id="wordCounter" class="text-yellow-400 font-extrabold tracking-widest uppercase text-sm">WORD: 1 / 1</div>
+    </div>
+
+    <div id="arenaGrid" class="w-full max-w-6xl mx-auto flex-1 grid grid-cols-1 gap-6">
+        </div>
+
+    <div id="ghostOverlay" class="hidden fixed inset-0 bg-black/80 flex flex-col items-center justify-center z-50">
+        <h2 class="text-4xl font-black tracking-widest text-red-500 mb-2 uppercase">TIME'S UP!</h2>
+        <p class="text-gray-400 text-lg mb-4">The correct spelling target was:</p>
+        <div id="ghostWordContainer" class="flex gap-2 text-3xl font-black bg-white/10 p-6 rounded-2xl border-2 border-white/20"></div>
+    </div>
+
+    <script>
+        let config = null;
+        let currentWordIndex = 0;
+        let wordTimer = 0;
+        let globalTimerInterval = null;
+        
+        let p1State = { score: 0, streak: 0, lives: 5, targetArr: [], focusIdx: 0, frozen: false };
+        let p2State = { score: 0, streak: 0, lives: 5, targetArr: [], focusIdx: 0, frozen: false };
+
+        function loadEngine() {
+            const raw = localStorage.getItem("spelling_hub_config");
+            if(!raw) { window.location.href="index.html"; return; }
+            config = JSON.parse(raw);
+            
+            p1State.lives = config.hpHearts;
+            p2State.lives = config.hpHearts;
+            currentWordIndex = 0;
+
+            buildArenaViewports();
+            loadWordRound();
+            startGlobalCountdown();
+        }
+
+        function buildArenaViewports() {
+            const grid = document.getElementById("arenaGrid");
+            grid.innerHTML = "";
+
+            if(config.activeMode === "single") {
+                grid.className = "w-full max-w-4xl mx-auto flex-1 grid grid-cols-1";
+                grid.appendChild(createPlayerDOM("p1", "STUDENT ARENA"));
+            } else {
+                grid.className = "w-full max-w-6xl mx-auto flex-1 grid grid-cols-1 md:grid-cols-2 gap-6";
+                grid.appendChild(createPlayerDOM("p1", "PLAYER 1 (Left Side - WASD to move, Space to drop)"));
+                grid.appendChild(createPlayerDOM("p2", "PLAYER 2 (Right Side - Arrows to move, Enter to drop)"));
+            }
+        }
+
+        function createPlayerDOM(pid, label) {
+            const container = document.createElement("div");
+            container.id = `${pid}Container`;
+            container.className = "bg-[#2c3e50]/40 border-2 border-white/10 rounded-3xl p-6 flex flex-col justify-between shadow-lg relative";
+            container.innerHTML = `
+                <div>
+                    <div class="flex justify-between items-center border-b border-white/5 pb-3 mb-4">
+                        <span class="font-black text-sm text-gray-400">${label}</span>
+                        <div class="flex items-center gap-2 font-black text-orange-400 text-sm">🔥 STREAK: <span id="${pid}Streak">0</span></div>
+                    </div>
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="text-2xl font-black">SCORE: <span id="${pid}Score" class="text-emerald-400">0</span></div>
+                        <div id="${pid}Hearts" class="text-red-500 text-xl"></div>
+                    </div>
+                    <div class="bg-black/20 rounded-2xl p-4 text-center mb-6 border border-white/5">
+                        <div class="text-xs font-bold uppercase text-gray-400 mb-1">Clue / Hint</div>
+                        <div id="${pid}Hint" class="text-xl font-extrabold text-yellow-300">---</div>
+                    </div>
+                    <div id="${pid}Slots" class="flex flex-wrap gap-2 justify-center py-4 bg-black/10 rounded-2xl border border-dashed border-white/10 min-h-[90px] mb-8"></div>
+                </div>
+                <div>
+                    <div class="text-xs font-bold uppercase text-center text-gray-400 mb-2">Available Letters Tray</div>
+                    <div id="${pid}Tray" class="flex flex-wrap gap-2 justify-center p-4 bg-white/5 rounded-2xl border border-white/5 min-h-[70px]"></div>
+                </div>
+            `;
+            return container;
+        }
+
+        function loadWordRound() {
+            if(currentWordIndex >= config.wordList.length) {
+                endGameSession(); return;
+            }
+            const activeMatch = config.wordList[currentWordIndex];
+            document.getElementById("wordCounter").innerText = `WORD: ${currentWordIndex + 1} / ${config.wordList.length}`;
+            wordTimer = config.timerPerWord;
+
+            setupPlayerRound("p1", p1State, activeMatch);
+            if(config.activeMode === "double") {
+                setupPlayerRound("p2", p2State, activeMatch);
+            }
+            renderGlobalTimerBar();
+        }
+
+        function setupPlayerRound(pid, state, data) {
+            state.targetArr = Array(data.answer.length).fill("");
+            state.focusIdx = 0;
+            state.frozen = false;
+            
+            const container = document.getElementById(`${pid}Container`);
+            if(container) container.classList.remove("frozen", "animate-shake");
+
+            document.getElementById(`${pid}Hint`).innerText = data.hint;
+            document.getElementById(`${pid}Streak`).innerText = state.streak;
+            document.getElementById(`${pid}Score`).innerText = state.score;
+            document.getElementById(`${pid}Hearts`).innerHTML = "❤️".repeat(Math.max(0, state.lives)) || "💀 OUT";
+
+            const slotsContainer = document.getElementById(`${pid}Slots`);
+            slotsContainer.innerHTML = "";
+            for(let i=0; i<data.answer.length; i++) {
+                slotsContainer.insertAdjacentHTML('beforeend', `<div data-idx="${i}" class="target-slot w-12 h-14 bg-black/30 rounded-xl flex items-center justify-center font-black text-xl border-2 border-dashed border-white/20"></div>`);
+            }
+
+            let shuffled = data.answer.split("").map(v => ({ v, sort: Math.random() })).sort((a, b) => a.sort - b.sort).map(({ v }) => v);
+
+            const tray = document.getElementById(`${pid}Tray`);
+            tray.innerHTML = "";
+            shuffled.forEach((char, index) => {
+                const el = document.createElement("div");
+                el.className = "letter-block w-12 h-12 bg-gradient-to-b from-amber-400 to-orange-500 rounded-xl flex items-center justify-center font-black text-gray-900 text-xl shadow-md";
+                el.innerText = char;
+                el.draggable = true;
+                el.id = `${pid}-let-${index}`;
+                
+                el.addEventListener("dragstart", (evt) => {
+                    evt.dataTransfer.setData("text/plain", JSON.stringify({ pid, char, id: el.id }));
+                });
+                tray.appendChild(el);
+            });
+
+            if(state.lives > 0) highlightKbdTrayElement(pid, 0);
+        }
+
+        document.body.addEventListener("dragover", (e) => { if(e.target.classList.contains("target-slot")) e.preventDefault(); });
+        document.body.addEventListener("drop", (e) => {
+            if(!e.target.classList.contains("target-slot")) return;
+            e.preventDefault();
+            try {
+                const data = JSON.parse(e.dataTransfer.getData("text/plain"));
+                const targetIdx = parseInt(e.target.getAttribute("data-idx"));
+                processTargetAssignment(data.pid, targetIdx, data.char, data.id);
+            } catch(err) {}
+        });
+
+        function processTargetAssignment(pid, slotIdx, char, blockId) {
+            const state = (pid === "p1") ? p1State : p2State;
+            if(state.frozen || state.lives <= 0 || state.targetArr[slotIdx] !== "") return;
+
+            state.targetArr[slotIdx] = char;
+            
+            const targetSlot = document.querySelector(`#${pid}Slots [data-idx="${slotIdx}"]`);
+            targetSlot.innerText = char;
+            targetSlot.className = "target-slot w-12 h-14 bg-emerald-500 text-white rounded-xl flex items-center justify-center font-black text-xl border-2 border-solid border-emerald-300 shadow-inner";
+
+            const block = document.getElementById(blockId);
+            if(block) block.remove();
+
+            const remaining = document.querySelectorAll(`#${pid}Tray .letter-block`);
+            if(remaining.length > 0) {
+                p1State.focusIdx = 0; p2State.focusIdx = 0;
+                highlightKbdTrayElement(pid, 0);
+            }
+
+            verifyCurrentAnswerPuzzleState(pid, state);
+        }
+
+        function verifyCurrentAnswerPuzzleState(pid, state) {
+            const wordData = config.wordList[currentWordIndex];
+            if(state.targetArr.filter(c => c !== "").length === wordData.answer.length) {
+                if(state.targetArr.join("") === wordData.answer) {
+                    state.score += 10 + (state.streak >= 3 ? 5 : 0);
+                    state.streak++;
+                    triggerRoundSuccessJump();
+                } else {
+                    state.lives--;
+                    state.streak = 0;
+                    document.getElementById(`${pid}Hearts`).innerText = "❤️".repeat(Math.max(0, state.lives)) || "💀 OUT";
+                    
+                    const pContainer = document.getElementById(`${pid}Container`);
+                    pContainer.classList.add("animate-shake");
+                    setTimeout(() => pContainer.classList.remove("animate-shake"), 400);
+
+                    if(state.lives <= 0) {
+                        pContainer.classList.add("frozen");
+                        checkGlobalMatchFailureState();
+                    } else {
+                        state.frozen = true;
+                        pContainer.classList.add("frozen");
+                        setTimeout(() => {
+                            state.frozen = false;
+                            pContainer.classList.remove("frozen");
+                            setupPlayerRound(pid, state, wordData);
+                        }, 3000);
+                    }
+                }
+            }
+        }
+
+        function checkGlobalMatchFailureState() {
+            if(config.activeMode === "single" && p1State.lives <= 0) { triggerTimeOutIntermission(); }
+            else if(config.activeMode === "double" && p1State.lives <= 0 && p2State.lives <= 0) { triggerTimeOutIntermission(); }
+        }
+
+        function triggerRoundSuccessJump() {
+            clearInterval(globalTimerInterval);
+            currentWordIndex++;
+            setTimeout(loadWordRound, 800);
+        }
+
+        function startGlobalCountdown() {
+            clearInterval(globalTimerInterval);
+            globalTimerInterval = setInterval(() => {
+                wordTimer--;
+                renderGlobalTimerBar();
+                if(wordTimer <= 0) {
+                    clearInterval(globalTimerInterval);
+                    triggerTimeOutIntermission();
+                }
+            }, 1000);
+        }
+
+        function renderGlobalTimerBar() {
+            const pct = (wordTimer / config.timerPerWord) * 100;
+            document.getElementById("globalProgressBar").style.width = `${pct}%`;
+            document.getElementById("globalTimerText").innerText = `TIMER: ${wordTimer}s`;
+        }
+
+        function triggerTimeOutIntermission() {
+            clearInterval(globalTimerInterval);
+            p1State.streak = 0; p2State.streak = 0;
+            
+            const ghost = document.getElementById("ghostOverlay");
+            const wordContainer = document.getElementById("ghostWordContainer");
+            wordContainer.innerHTML = "";
+            
+            config.wordList[currentWordIndex].answer.split("").forEach(l => {
+                wordContainer.insertAdjacentHTML('beforeend', `<div class="w-12 h-14 bg-white/20 border-2 border-white text-yellow-300 rounded-xl flex items-center justify-center font-bold">${l}</div>`);
+            });
+
+            ghost.classList.remove("hidden");
+            setTimeout(() => {
+                ghost.classList.add("hidden");
+                currentWordIndex++;
+                loadWordRound();
+                if(currentWordIndex < config.wordList.length) startGlobalCountdown();
+            }, 2500);
+        }
+
+        function endGameSession() {
+            clearInterval(globalTimerInterval);
+            let msg = "🎉 MATCH COMPLETED!\n\n";
+            if(config.activeMode === "single") { msg += `Final Score: ${p1State.score}`; }
+            else { msg += `Player 1 Score: ${p1State.score}\nPlayer 2 Score: ${p2State.score}`; }
+            alert(msg); window.location.href = "index.html";
+        }
+
+        function highlightKbdTrayElement(pid, idx) {
+            document.querySelectorAll(`#${pid}Tray .letter-block`).forEach(el => el.classList.remove("kbd-focus"));
+            const targetBlock = document.querySelectorAll(`#${pid}Tray .letter-block`)[idx];
+            if(targetBlock) targetBlock.classList.add("kbd-focus");
+        }
+
+        window.addEventListener("keydown", (e) => {
+            const k = e.key.toLowerCase();
+            
+            // Player 1 Keyboard Controls (WASD + Space)
+            if(!p1State.frozen && p1State.lives > 0) {
+                const p1Blocks = document.querySelectorAll("#p1Tray .letter-block");
+                if(p1Blocks.length > 0) {
+                    if(k === "a" || k === "s") {
+                        p1State.focusIdx = (p1State.focusIdx > 0) ? p1State.focusIdx - 1 : p1Blocks.length - 1;
+                        highlightKbdTrayElement("p1", p1State.focusIdx);
+                    } else if(k === "d" || k === "w") {
+                        p1State.focusIdx = (p1State.focusIdx < p1Blocks.length - 1) ? p1State.focusIdx + 1 : 0;
+                        highlightKbdTrayElement("p1", p1State.focusIdx);
+                    } else if(e.key === " ") {
+                        e.preventDefault();
+                        const activeBlock = p1Blocks[p1State.focusIdx];
+                        if(activeBlock) {
+                            const slotIdx = p1State.targetArr.indexOf("");
+                            if(slotIdx !== -1) processTargetAssignment("p1", slotIdx, activeBlock.innerText, activeBlock.id);
+                        }
+                    }
+                }
+            }
+
+            // Player 2 Keyboard Controls (Arrows + Enter)
+            if(config && config.activeMode === "double" && !p2State.frozen && p2State.lives > 0) {
+                const p2Blocks = document.querySelectorAll("#p2Tray .letter-block");
+                if(p2Blocks.length > 0) {
+                    if(e.key === "ArrowLeft" || e.key === "ArrowDown") {
+                        p2State.focusIdx = (p2State.focusIdx > 0) ? p2State.focusIdx - 1 : p2Blocks.length - 1;
+                        highlightKbdTrayElement("p2", p2State.focusIdx);
+                    } else if(e.key === "ArrowRight" || e.key === "ArrowUp") {
+                        p2State.focusIdx = (p2State.focusIdx < p2Blocks.length - 1) ? p2State.focusIdx + 1 : 0;
+                        highlightKbdTrayElement("p2", p2State.focusIdx);
+                    } else if(e.key === "Enter") {
+                        e.preventDefault();
+                        const activeBlock = p2Blocks[p2State.focusIdx];
+                        if(activeBlock) {
+                            const slotIdx = p2State.targetArr.indexOf("");
+                            if(slotIdx !== -1) processTargetAssignment("p2", slotIdx, activeBlock.innerText, activeBlock.id);
+                        }
+                    }
+                }
+            }
+        });
+
+        window.onload = loadEngine;
+    </script>
+</body>
+</html>
