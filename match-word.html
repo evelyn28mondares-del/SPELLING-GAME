@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drag & Drop Match Center - Admin Learning Hub</title>
+    <title>Spelling Game Center - Drag & Drop Word Match</title>
     <style>
         :root {
             --bg-color: #2c3e50;
@@ -125,7 +125,7 @@
             justify-content: space-between;
         }
 
-        /* Item Dataset Matrix */
+        /* Word Dataset Matrix */
         .dataset-header {
             background: #ebedef;
             padding: 10px;
@@ -222,23 +222,23 @@
 <body>
 
 <div class="admin-container">
-    <!-- Header -->
+    <!-- Header to Match image_c0d49e.png -->
     <div class="hub-header">
-        <h1>Drag and Drop Game Center</h1>
+        <h1>Spelling Game Center</h1>
         <h2>Teacher Evelyn Learning Hub</h2>
     </div>
 
     <div class="workspace-body">
-        <!-- Global Rules Configuration -->
+        <!-- Global Mode Selector Options -->
         <div class="row-grid">
             <div class="form-group">
                 <label>Select Active Mode:</label>
                 <select id="activeMode">
-                    <option value="dual-race">Dual Player (Simultaneous Racing)</option>
+                    <option value="word-match">Double Player (Drag & Drop Word Match)</option>
                 </select>
             </div>
             <div class="form-group">
-                <label>Global HP Hearts:</label>
+                <label>HP Hearts:</label>
                 <input type="number" id="gHearts" value="10" min="1" max="99">
             </div>
         </div>
@@ -257,7 +257,7 @@
             </div>
         </div>
 
-        <!-- Independent Team Balance Controllers -->
+        <!-- Independent Team Tracking Configurations -->
         <div class="team-config-section">
             <div class="team-grid">
                 <!-- Team 1 Controls -->
@@ -265,11 +265,11 @@
                     <h3 style="color: var(--primary-red);">TEAM 1 (Red Track)</h3>
                     <div style="display: flex; flex-direction: column; gap: 8px;">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-size:13px;">Timer (Sec):</span>
+                            <span style="font-size:13px;">Timer Per Word:</span>
                             <input type="number" id="t1Timer" value="60" style="width:60px; text-align:center;">
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-size:13px;">Scorer Engine:</span>
+                            <span style="font-size:13px;">Scorer Engine (+):</span>
                             <input type="number" id="t1Score" value="10" style="width:60px; text-align:center;">
                         </div>
                     </div>
@@ -280,11 +280,11 @@
                     <h3 style="color: var(--primary-blue);">TEAM 2 (Blue Track)</h3>
                     <div style="display: flex; flex-direction: column; gap: 8px;">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-size:13px;">Timer (Sec):</span>
+                            <span style="font-size:13px;">Timer Per Word:</span>
                             <input type="number" id="t2Timer" value="60" style="width:60px; text-align:center;">
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-size:13px;">Scorer Engine:</span>
+                            <span style="font-size:13px;">Scorer Engine (+):</span>
                             <input type="number" id="t2Score" value="10" style="width:60px; text-align:center;">
                         </div>
                     </div>
@@ -292,42 +292,49 @@
             </div>
         </div>
 
-        <!-- Action Workspace Rules Banner -->
+        <!-- Rules Info Banner -->
         <div class="system-banner">
-            🚀 Engine Active: Correct targets award Scorer value. Incorrect match drags instantly lose 1 Heart (From 10 total Hearts).
+            🚀 Engine Active: +10 Points per Correct Word. Incorrect inputs subtract 1 Heart from your 10 total HP Hearts immediately!
         </div>
 
-        <!-- Interactive Question Set Builder -->
-        <div style="margin-bottom: 5px; font-weight: bold; color: var(--text-dark);">Shared Matching Option Datasets:</div>
+        <!-- Word Dataset Workspace -->
+        <div style="margin-bottom: 5px; font-weight: bold; color: var(--text-dark);">Shared Drag & Drop Word Matching List:</div>
         <div class="dataset-header">
-            <div>Hint / Target Target</div>
-            <div>Option 1 (Correct)</div>
-            <div>Option 2</div>
-            <div>Option 3</div>
+            <div>Hint / Image URL</div>
+            <div>Word Option 1 (Correct)</div>
+            <div>Word Option 2</div>
+            <div>Word Option 3</div>
             <div style="text-align:center;">Del</div>
         </div>
 
         <div id="datasetContainer">
-            <!-- Starting Default Mock Datasets -->
+            <!-- Default Examples with BED, HEN, GIRL -->
             <div class="dataset-row">
-                <input type="text" placeholder="e.g., Target: Place to Sleep" value="Place to Sleep">
-                <input type="text" placeholder="BED" value="BED">
-                <input type="text" placeholder="HEN" value="HEN">
-                <input type="text" placeholder="GIRL" value="GIRL">
+                <input type="text" placeholder="Hint or Image URL" value="Place to sleep">
+                <input type="text" placeholder="Correct Word" value="BED">
+                <input type="text" placeholder="Option 2" value="HEN">
+                <input type="text" placeholder="Option 3" value="GIRL">
                 <button class="btn-delete" onclick="deleteRow(this)">X</button>
             </div>
             <div class="dataset-row">
-                <input type="text" placeholder="e.g., Target: Farm Animal" value="Farm Animal">
-                <input type="text" placeholder="HEN" value="HEN">
-                <input type="text" placeholder="BED" value="BED">
-                <input type="text" placeholder="GIRL" value="GIRL">
+                <input type="text" placeholder="Hint or Image URL" value="Farm Animal">
+                <input type="text" placeholder="Correct Word" value="HEN">
+                <input type="text" placeholder="Option 2" value="BED">
+                <input type="text" placeholder="Option 3" value="GIRL">
+                <button class="btn-delete" onclick="deleteRow(this)">X</button>
+            </div>
+            <div class="dataset-row">
+                <input type="text" placeholder="Hint or Image URL" value="Little Female Child">
+                <input type="text" placeholder="Correct Word" value="GIRL">
+                <input type="text" placeholder="Option 2" value="BED">
+                <input type="text" placeholder="Option 3" value="HEN">
                 <button class="btn-delete" onclick="deleteRow(this)">X</button>
             </div>
         </div>
 
-        <button class="btn-utility btn-add-word" onclick="addNewRow()">+ ADD SET</button>
+        <button class="btn-utility btn-add-word" onclick="addNewRow()">+ ADD WORD</button>
 
-        <!-- Profile / Storage Management Zone -->
+        <!-- Profile/File System Management -->
         <div class="footer-utility">
             <button class="btn-utility btn-save-file" onclick="saveConfiguration()">💾 SAVE FILE</button>
             <button class="btn-utility btn-load-file" onclick="document.getElementById('fileInput').click()">📂 LOAD FILE</button>
@@ -337,22 +344,21 @@
         </div>
 
         <br><br>
-        <!-- Master Execution Target -->
+        <!-- Save & Launch Target Trigger -->
         <button class="btn-launch" onclick="launchGameEngine()">Save & Launch Selection</button>
     </div>
 </div>
 
 <script>
-    // Dynamically insert a row matching the custom parameters
     function addNewRow() {
         const container = document.getElementById('datasetContainer');
         const row = document.createElement('div');
         row.className = 'dataset-row';
         row.innerHTML = `
-            <input type="text" placeholder="Hint Target">
-            <input type="text" placeholder="Option A (Correct)">
-            <input type="text" placeholder="Option B">
-            <input type="text" placeholder="Option C">
+            <input type="text" placeholder="Hint or Image URL">
+            <input type="text" placeholder="Correct Word">
+            <input type="text" placeholder="Option 2">
+            <input type="text" placeholder="Option 3">
             <button class="btn-delete" onclick="deleteRow(this)">X</button>
         `;
         container.appendChild(row);
@@ -363,13 +369,12 @@
     }
 
     function clearWorkspace() {
-        if(confirm("Are you sure you want to clear the workspace profiles?")) {
+        if(confirm("Clear Hub Workspace Profile data?")) {
             document.getElementById('datasetContainer').innerHTML = '';
             addNewRow();
         }
     }
 
-    // Handles downloading settings schema profile to a local JSON payload
     function saveConfiguration() {
         const config = {
             hearts: document.getElementById('gHearts').value,
@@ -395,13 +400,12 @@
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(config));
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", "drag_drop_hub_config.json");
+        downloadAnchor.setAttribute("download", "spelling_match_config.json");
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
     }
 
-    // Handles profile loads directly back to DOM elements
     function loadConfiguration(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -434,7 +438,7 @@
     }
 
     function launchGameEngine() {
-        alert("Configuration Saved! Game Engine compiled with 10 Starting Hearts data. Ready to push to the Dual Match screens.");
+        alert("Spelling Game Center Engine Compiled! Layout setup with 10 HP Hearts. Ready to launch match racing!");
     }
 </script>
 
