@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drag & Drop Match Center - Admin Learning Hub</title>
+    <style>
+        :root {
+            --bg-color: #2c3e50;
+            --panel-bg: #ffffff;
+            --header-bg: #1a252f;
+            --primary-green: #2ecc71;
+            --primary-blue: #3498db;
+            --primary-red: #e74c3c;
+            --text-dark: #333333;
+            --border-color: #bdc3c7;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .admin-container {
+            width: 100%;
+            max-width: 900px;
+            background-color: var(--panel-bg);
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        /* Header Style matching image_c0d49e.png */
+        .hub-header {
+            background-color: var(--header-bg);
+            color: #ffffff;
+            text-align: center;
+            padding: 20px;
+            border-bottom: 5px solid var(--primary-red);
+        }
+
+        .hub-header h1 {
+            margin: 0;
+            font-size: 28px;
+            letter-spacing: 1px;
+        }
+
+        .hub-header h2 {
+            margin: 5px 0 0 0;
+            font-size: 16px;
+            color: #f1c40f;
+            font-weight: 600;
+        }
+
+        .workspace-body {
+            padding: 20px;
+        }
+
+        .row-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            align-items: center;
+            background: #f8f9fa;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px 12px;
+        }
+
+        .form-group label {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--text-dark);
+            flex: 1;
+        }
+
+        .form-group input[type="number"], 
+        .form-group select {
+            width: 100px;
+            padding: 6px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Team Dashboard Area */
+        .team-config-section {
+            background: #f1f2f6;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .team-box {
+            background: #ffffff;
+            border-radius: 6px;
+            padding: 12px;
+            border-top: 4px solid var(--primary-blue);
+        }
+
+        .team-box.t1 { border-top-color: var(--primary-red); }
+        .team-box.t2 { border-top-color: var(--primary-blue); }
+
+        .team-box h3 {
+            margin: 0 0 10px 0;
+            font-size: 15px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Item Dataset Matrix */
+        .dataset-header {
+            background: #ebedef;
+            padding: 10px;
+            font-weight: bold;
+            font-size: 14px;
+            display: grid;
+            grid-template-columns: 2fr 1.5fr 1.5fr 1.5fr 40px;
+            gap: 10px;
+            align-items: center;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        .dataset-row {
+            display: grid;
+            grid-template-columns: 2fr 1.5fr 1.5fr 1.5fr 40px;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .dataset-row input {
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .btn-delete {
+            background-color: var(--primary-red);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            height: 34px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Action Buttons */
+        .btn-utility {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+            margin-right: 10px;
+        }
+
+        .btn-save-file { background-color: #2980b9; }
+        .btn-load-file { background-color: #9b59b6; }
+        .btn-add-word { background-color: #34495e; margin-top: 10px;}
+        .btn-erase { background-color: var(--primary-red); float: right;}
+
+        .system-banner {
+            background-color: #ffeaa7;
+            border: 1px solid #f1c40f;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #d35400;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .btn-launch {
+            display: block;
+            width: 100%;
+            background-color: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: background 0.2s;
+        }
+
+        .btn-launch:hover {
+            background-color: #27ae60;
+        }
+
+        .footer-utility {
+            border-top: 1px solid var(--border-color);
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="admin-container">
+    <!-- Header -->
+    <div class="hub-header">
+        <h1>Drag and Drop Game Center</h1>
+        <h2>Teacher Evelyn Learning Hub</h2>
+    </div>
+
+    <div class="workspace-body">
+        <!-- Global Rules Configuration -->
+        <div class="row-grid">
+            <div class="form-group">
+                <label>Select Active Mode:</label>
+                <select id="activeMode">
+                    <option value="dual-race">Dual Player (Simultaneous Racing)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Global HP Hearts:</label>
+                <input type="number" id="gHearts" value="10" min="1" max="99">
+            </div>
+        </div>
+
+        <div class="row-grid">
+            <div class="form-group">
+                <label>Speed Tuning:</label>
+                <select id="speedTuning">
+                    <option value="normal">Normal</option>
+                    <option value="fast">Fast</option>
+                </select>
+            </div>
+            <div class="form-group" style="justify-content: space-around;">
+                <label><input type="checkbox" id="musicTrack" checked> Music Track</label>
+                <label><input type="checkbox" id="sfxEngine" checked> SFX Audio Engine</label>
+            </div>
+        </div>
+
+        <!-- Independent Team Balance Controllers -->
+        <div class="team-config-section">
+            <div class="team-grid">
+                <!-- Team 1 Controls -->
+                <div class="team-box t1">
+                    <h3 style="color: var(--primary-red);">TEAM 1 (Red Track)</h3>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:13px;">Timer (Sec):</span>
+                            <input type="number" id="t1Timer" value="60" style="width:60px; text-align:center;">
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:13px;">Scorer Engine:</span>
+                            <input type="number" id="t1Score" value="10" style="width:60px; text-align:center;">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Team 2 Controls -->
+                <div class="team-box t2">
+                    <h3 style="color: var(--primary-blue);">TEAM 2 (Blue Track)</h3>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:13px;">Timer (Sec):</span>
+                            <input type="number" id="t2Timer" value="60" style="width:60px; text-align:center;">
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:13px;">Scorer Engine:</span>
+                            <input type="number" id="t2Score" value="10" style="width:60px; text-align:center;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Workspace Rules Banner -->
+        <div class="system-banner">
+            🚀 Engine Active: Correct targets award Scorer value. Incorrect match drags instantly lose 1 Heart (From 10 total Hearts).
+        </div>
+
+        <!-- Interactive Question Set Builder -->
+        <div style="margin-bottom: 5px; font-weight: bold; color: var(--text-dark);">Shared Matching Option Datasets:</div>
+        <div class="dataset-header">
+            <div>Hint / Target Target</div>
+            <div>Option 1 (Correct)</div>
+            <div>Option 2</div>
+            <div>Option 3</div>
+            <div style="text-align:center;">Del</div>
+        </div>
+
+        <div id="datasetContainer">
+            <!-- Starting Default Mock Datasets -->
+            <div class="dataset-row">
+                <input type="text" placeholder="e.g., Target: Place to Sleep" value="Place to Sleep">
+                <input type="text" placeholder="BED" value="BED">
+                <input type="text" placeholder="HEN" value="HEN">
+                <input type="text" placeholder="GIRL" value="GIRL">
+                <button class="btn-delete" onclick="deleteRow(this)">X</button>
+            </div>
+            <div class="dataset-row">
+                <input type="text" placeholder="e.g., Target: Farm Animal" value="Farm Animal">
+                <input type="text" placeholder="HEN" value="HEN">
+                <input type="text" placeholder="BED" value="BED">
+                <input type="text" placeholder="GIRL" value="GIRL">
+                <button class="btn-delete" onclick="deleteRow(this)">X</button>
+            </div>
+        </div>
+
+        <button class="btn-utility btn-add-word" onclick="addNewRow()">+ ADD SET</button>
+
+        <!-- Profile / Storage Management Zone -->
+        <div class="footer-utility">
+            <button class="btn-utility btn-save-file" onclick="saveConfiguration()">💾 SAVE FILE</button>
+            <button class="btn-utility btn-load-file" onclick="document.getElementById('fileInput').click()">📂 LOAD FILE</button>
+            <input type="file" id="fileInput" style="display:none;" onchange="loadConfiguration(event)">
+            
+            <button class="btn-utility btn-erase" onclick="clearWorkspace()">ERASE DATA</button>
+        </div>
+
+        <br><br>
+        <!-- Master Execution Target -->
+        <button class="btn-launch" onclick="launchGameEngine()">Save & Launch Selection</button>
+    </div>
+</div>
+
+<script>
+    // Dynamically insert a row matching the custom parameters
+    function addNewRow() {
+        const container = document.getElementById('datasetContainer');
+        const row = document.createElement('div');
+        row.className = 'dataset-row';
+        row.innerHTML = `
+            <input type="text" placeholder="Hint Target">
+            <input type="text" placeholder="Option A (Correct)">
+            <input type="text" placeholder="Option B">
+            <input type="text" placeholder="Option C">
+            <button class="btn-delete" onclick="deleteRow(this)">X</button>
+        `;
+        container.appendChild(row);
+    }
+
+    function deleteRow(button) {
+        button.parentElement.remove();
+    }
+
+    function clearWorkspace() {
+        if(confirm("Are you sure you want to clear the workspace profiles?")) {
+            document.getElementById('datasetContainer').innerHTML = '';
+            addNewRow();
+        }
+    }
+
+    // Handles downloading settings schema profile to a local JSON payload
+    function saveConfiguration() {
+        const config = {
+            hearts: document.getElementById('gHearts').value,
+            speed: document.getElementById('speedTuning').value,
+            t1Timer: document.getElementById('t1Timer').value,
+            t1Score: document.getElementById('t1Score').value,
+            t2Timer: document.getElementById('t2Timer').value,
+            t2Score: document.getElementById('t2Score').value,
+            datasets: []
+        };
+
+        const rows = document.querySelectorAll('#datasetContainer .dataset-row');
+        rows.forEach(row => {
+            const inputs = row.querySelectorAll('input');
+            config.datasets.push({
+                target: inputs[0].value,
+                opt1: inputs[1].value,
+                opt2: inputs[2].value,
+                opt3: inputs[3].value
+            });
+        });
+
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(config));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", "drag_drop_hub_config.json");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    }
+
+    // Handles profile loads directly back to DOM elements
+    function loadConfiguration(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const config = JSON.parse(e.target.result);
+            document.getElementById('gHearts').value = config.hearts;
+            document.getElementById('speedTuning').value = config.speed;
+            document.getElementById('t1Timer').value = config.t1Timer;
+            document.getElementById('t1Score').value = config.t1Score;
+            document.getElementById('t2Timer').value = config.t2Timer;
+            document.getElementById('t2Score').value = config.t2Score;
+
+            const container = document.getElementById('datasetContainer');
+            container.innerHTML = '';
+            config.datasets.forEach(set => {
+                const row = document.createElement('div');
+                row.className = 'dataset-row';
+                row.innerHTML = `
+                    <input type="text" value="${set.target}">
+                    <input type="text" value="${set.opt1}">
+                    <input type="text" value="${set.opt2}">
+                    <input type="text" value="${set.opt3}">
+                    <button class="btn-delete" onclick="deleteRow(this)">X</button>
+                `;
+                container.appendChild(row);
+            });
+        };
+        reader.readAsText(file);
+    }
+
+    function launchGameEngine() {
+        alert("Configuration Saved! Game Engine compiled with 10 Starting Hearts data. Ready to push to the Dual Match screens.");
+    }
+</script>
+
+</body>
+</html>
