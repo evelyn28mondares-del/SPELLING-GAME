@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Match Game</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --p1-color: #4a90e2;
+            --p2-color: #e91e63;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 { margin-bottom: 10px; color: #333; }
+        .mode-select {
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #333;
+            color: white;
+            margin: 0 5px;
+            transition: 0.2s;
+        }
+        button:hover { opacity: 0.9; }
+        
+        .game-container {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            width: 100%;
+            max-width: 1200px;
+        }
+        
+        .player-side {
+            flex: 1;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: none;
+        }
+        .player-side.active { display: block; }
+        #p1-side { border-top: 8px solid var(--p1-color); }
+        #p2-side { border-top: 8px solid var(--p2-color); }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: #eee;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .game-board {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 45%;
+        }
+
+        .word-box {
+            padding: 15px;
+            background: #f9f9f9;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            min-height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+
+        .draggable {
+            background: #fff;
+            border: 2px solid #333;
+            cursor: grab;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+        .draggable:active { cursor: grabbing; }
+
+        /* Keyboard Focus Styling */
+        .draggable:focus, .word-box:focus {
+            outline: 3px solid orange;
+        }
+
+        .matched {
+            background: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+            cursor: default;
+        }
+        
+        .instructions {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Word to Word Match</h1>
+    
+    <div class="mode-select">
+        <button onclick="startGame('single')">Single Player</button>
+        <button onclick="startGame('double')">Double Player</button>
+    </div>
+
+    <div class="game-container">
+        <!-- PLAYER 1 SIDE -->
+        <div id="p1-side" class="player-side">
+            <h2>Player 1 (Left Side)</h2>
+            <div class="stats">
+                <div>Score: <span id="p1-score">0</span></div>
+                <div>Time: <span id="p1-timer">30</span>s</div>
+            </div>
+            <div class="game-board">
+                <div class="column answers" id="p1-left"></div>
+                <div class="column options" id="p1-right"></div>
+            </div>
+        </div>
+
+        <!-- PLAYER 2 SIDE -->
+        <div id="p2-side" class="player-side">
+            <h2>Player 2 (Right Side)</h2>
+            <div class="stats">
+                <div>Score: <span id="p2-score">0</span></div>
+                <div>Time: <span id="p2-timer">30</span>s</div>
+            </div>
+            <div class="game-board">
+                <div class="column answers" id="p2-left"></div>
+                <div class="column options" id="p2-right"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="instructions" id="controls-info">
+        <h3>Controls:</h3>
+        <p><strong>Mouse:</strong> Drag items from the right column and drop them onto the matching words on the left column.</p>
+        <p><strong>Keyboard Player 1:</strong> Use <b>W/S</b> to navigate right side, <b>Space</b> to select, <b>A/D</b> to jump to left side, <b>W/S</b> to choose target, <b>Enter</b> to drop.</p>
+        <p><strong>Keyboard Player 2:</strong> Use <b>Up/Down Arrows</b> to navigate right side, <b>Right Ctrl</b> to select, <b>Left/Right Arrows</b> to jump to left side, <b>Up/Down Arrows</b> to choose target, <b>Enter</b> to drop.</p>
+    </div>
+
+<script>
+    // Game Data: Match left to right
+    const dataset = [
+        { left: "GIRL", right: "BOY" },
+        { left: "BAG", right: "LUGGAGE" },
+        { left: "HEN", right: "CHICKEN" },
+        { left: "HOT", right: "COLD" },
+        { left: "DAY", right: "NIGHT" }
+    ];
+
+    let gameActive = false;
+    let players = {};
+
+    function startGame(mode) {
+        gameActive = true;
+        document.getElementById('p1-side').classList.add('active');
+        
+        // Initialize Player 1
+        initPlayer('p1', JSON.parse(JSON.stringify(dataset)));
+
+        if (mode === 'double') {
+            document.getElementById('p2-side').classList.add('active');
+            initPlayer('p2', JSON.parse(JSON.stringify(dataset)));
+        } else {
+            document.getElementById('p2-side').classList.remove('active');
+            if(players.p2) clearInterval(players.p2.interval);
+            delete players.p2;
+        }
+    }
+
+    function initPlayer(pId, data) {
+        if (players[pId] && players[pId].interval) clearInterval(players[pId].interval);
+
+        players[pId] = {
+            score: 0,
+            timeLeft: 30,
+            data: data,
+            selectedId: null,
+            interval: null
+        };
+
+        document.getElementById(`${pId}-score`).innerText = "0";
+        document.getElementById(`${pId}-timer`).innerText = "30";
+
+        // Shuffle right column options
+        const shuffledRight = [...data].sort(() => Math.random() - 0.5);
+        // Shuffle left column targets
+        const shuffledLeft = [...data].sort(() => Math.random() - 0.5);
+
+        const leftCol = document.getElementById(`${pId}-left`);
+        const rightCol = document.getElementById(`${pId}-right`);
+        leftCol.innerHTML = '';
+        rightCol.innerHTML = '';
+
+        // Render targets (Left Column)
+        shuffledLeft.forEach((item, index) => {
+            const box = document.createElement('div');
+            box.className = 'word-box';
+            box.id = `${pId}-target-${index}`;
+            box.setAttribute('tabindex', '0'); // make focusable
+            box.dataset.match = item.left; 
+            box.innerText = item.left;
+            
+            // Drag and Drop Events
+            box.addEventListener('dragover', e => e.preventDefault());
+            box.addEventListener('drop', (e) => handleDrop(e, pId, item.left, box));
+
+            leftCol.appendChild(box);
+        });
+
+        // Render Draggables (Right Column)
+        shuffledRight.forEach((item, index) => {
+            const box = document.createElement('div');
+            box.className = 'word-box draggable';
+            box.id = `${pId}-drag-${index}`;
+            box.setAttribute('tabindex', '0'); // make focusable
+            box.setAttribute('draggable', 'true');
+            box.innerText = item.right;
+            box.dataset.belongsTo = item.left; // The correct match identifier
+
+            box.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', item.left);
+                e.dataTransfer.setData('sourceId', box.id);
+            });
+
+            rightCol.appendChild(box);
+        });
+
+        // Start Timer
+        players[pId].interval = setInterval(() => {
+            if (!gameActive) return;
+            players[pId].timeLeft--;
+            document.getElementById(`${pId}-timer`).innerText = players[pId].timeLeft;
+
+            if (players[pId].timeLeft <= 0) {
+                clearInterval(players[pId].interval);
+                checkEndGame();
+            }
+        }, 1000);
+    }
+
+    // Mouse Drag and Drop Logic
+    function handleDrop(e, pId, targetValue, targetElement) {
+        e.preventDefault();
+        const correctMatchValue = e.dataTransfer.getData('text/plain');
+        const sourceId = e.dataTransfer.getData('sourceId');
+        const dragElement = document.getElementById(sourceId);
+
+        if (dragElement && dragElement.id.startsWith(pId)) { // Ensure player drops on their own side
+            processMatch(pId, correctMatchValue, targetValue, dragElement, targetElement);
+        }
+    }
+
+    // Processing Match Verification
+    function processMatch(pId, dragMatchVal, targetVal, dragElem, targetElem) {
+        if (dragMatchVal === targetVal && !targetElem.classList.contains('matched')) {
+            // Success Match
+            targetElem.classList.add('matched');
+            targetElem.innerText = `${targetElem.innerText} = ${dragElem.innerText}`;
+            dragElem.remove();
+
+            players[pId].score += 10;
+            document.getElementById(`${pId}-score`).innerText = players[pId].score;
+
+            // Check Win condition for this player
+            const remaining = document.getElementById(`${pId}-right`).children.length;
+            if (remaining === 0) {
+                clearInterval(players[pId].interval);
+                alert(`${pId.toUpperCase()} Finished All Matches!`);
+                checkEndGame();
+            }
+        } else {
+            // Wrong Match Feedback
+            dragElem.style.borderColor = 'red';
+            setTimeout(() => dragElem.style.borderColor = '#333', 500);
+        }
+    }
+
+    function checkEndGame() {
+        const p1Finished = players.p1 ? (players.p1.timeLeft <= 0 || document.getElementById('p1-right').children.length === 0) : true;
+        const p2Finished = players.p2 ? (players.p2.timeLeft <= 0 || document.getElementById('p2-right').children.length === 0) : true;
+
+        if (p1Finished && p2Finished) {
+            gameActive = false;
+            let msg = `Game Over!\nPlayer 1 Score: ${players.p1.score}`;
+            if (players.p2) {
+                msg += `\nPlayer 2 Score: ${players.p2.score}`;
+                if (players.p1.score > players.p2.score) msg += "\n\nPlayer 1 WINS!";
+                else if (players.p2.score > players.p1.score) msg += "\n\nPlayer 2 WINS!";
+                else msg += "\n\nIt's a TIE!";
+            }
+            alert(msg);
+        }
+    }
+
+    // --- KEYBOARD CONTROLS IMPLEMENTATION ---
+    let p1KeyboardSelection = null;
+    let p2KeyboardSelection = null;
+
+    window.addEventListener('keydown', (e) => {
+        if (!gameActive) return;
+
+        // --- PLAYER 1 KEYBOARD (W, A, S, D, Space, Enter) ---
+        handlePlayerKeyboard(e, 'p1', {
+            up: 'w', down: 's', left: 'a', right: 'd', select: ' ', submit: 'Enter'
+        });
+
+        // --- PLAYER 2 KEYBOARD (ArrowKeys, Control, Enter) ---
+        handlePlayerKeyboard(e, 'p2', {
+            up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight', select: 'Control', submit: 'Enter'
+        });
+    });
+
+    function handlePlayerKeyboard(e, pId, keys) {
+        if (!players[pId]) return;
+        
+        let focused = document.activeElement;
+        
+        // Ensure focused item belongs to the current handling player
+        if (focused && focused.id && !focused.id.startsWith(pId)) return;
+
+        const rightItems = Array.from(document.getElementById(`${pId}-right`).children);
+        const leftItems = Array.from(document.getElementById(`${pId}-left`).children);
+
+        let index = rightItems.indexOf(focused);
+        let leftIndex = leftItems.indexOf(focused);
+
+        // Move Selection Down
+        if (e.key === keys.down) {
+            e.preventDefault();
+            if (index !== -1 && index < rightItems.length - 1) rightItems[index + 1].focus();
+            if (leftIndex !== -1 && leftIndex < leftItems.length - 1) leftItems[leftIndex + 1].focus();
+            if (index === -1 && leftIndex === -1 && rightItems.length > 0) rightItems[0].focus();
+        }
+        // Move Selection Up
+        else if (e.key === keys.up) {
+            e.preventDefault();
+            if (index > 0) rightItems[index - 1].focus();
+            if (leftIndex > 0) leftItems[leftIndex - 1].focus();
+        }
+        // Move Cross Columns (Right to Left)
+        else if (e.key === keys.left && index !== -1) {
+            e.preventDefault();
+            if(leftItems.length > 0) leftItems[0].focus();
+        }
+        // Move Cross Columns (Left to Right)
+        else if (e.key === keys.right && leftIndex !== -1) {
+            e.preventDefault();
+            if(rightItems.length > 0) rightItems[0].focus();
+        }
+        // Select Draggable Option
+        else if (e.key === keys.select && index !== -1) {
+            e.preventDefault();
+            if (pId === 'p1') p1KeyboardSelection = rightItems[index];
+            else p2KeyboardSelection = rightItems[index];
+            focused.style.outline = "3px solid var(--p1-color)";
+        }
+        // Drop on Target Option
+        else if (e.key === keys.submit && leftIndex !== -1) {
+            e.preventDefault();
+            let selectedDrag = pId === 'p1' ? p1KeyboardSelection : p2KeyboardSelection;
+            if (selectedDrag) {
+                let targetElem = leftItems[leftIndex];
+                processMatch(pId, selectedDrag.dataset.belongsTo, targetElem.dataset.match, selectedDrag, targetElem);
+                // Clear active selection variable
+                if (pId === 'p1') p1KeyboardSelection = null; else p2KeyboardSelection = null;
+            }
+        }
+    }
+
+    // Auto start single player mode on load
+    startGame('single');
+</script>
+</body>
+</html>
